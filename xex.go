@@ -15,8 +15,9 @@ type node struct {
 
 //Function represents a xex function which can be dynamically invoked.
 type Function struct {
-	Name string
-	impl interface{}
+	Name          string
+	Documentation string
+	impl          interface{}
 }
 
 //SetImplementation ensures that impl is a Go func & sets it inside the Function.
@@ -31,6 +32,8 @@ func (f *Function) SetImplementation(impl interface{}) error {
 //Exec executes the function implementation.
 //If the implementation does not return an error, error will always be nil.
 func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) {
+	//defer recovers from errors to reflect.ValueOf(...).Call(...) returning an error if,
+	//for example arguments do not match the function implementation
 	defer func() {
 		if recv := recover(); recv != nil {
 			err = fmt.Errorf("Error executing %q: %v", f.Name, recv)

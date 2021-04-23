@@ -29,7 +29,10 @@ func GetFunction(name string) (Function, error) {
 func init() {
 	functions = make(map[string]Function)
 
-	addInt := Function{Name: "addInt"}
+	addInt := Function{
+		Name:          "addInt",
+		Documentation: `addInt ads two ints returning a single int result`,
+	}
 	err := addInt.SetImplementation(func(num1, num2 int) int {
 		return num1 + num2
 	})
@@ -38,7 +41,10 @@ func init() {
 	}
 	RegisterFunction(addInt)
 
-	concat := Function{Name: "concat"}
+	concat := Function{
+		Name:          "concat",
+		Documentation: `concat concatenates any number of strings returning a single string result`,
+	}
 	err = concat.SetImplementation(func(strs ...string) string {
 		sb := strings.Builder{}
 		for _, s := range strs {
