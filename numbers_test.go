@@ -17,10 +17,21 @@ func TestInt(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
-	if answer[0] != expected[0].(int) {
+	answer := testMathsFunctions(t, convFunc)
+	if answer[0].(int) != expected[0].(int) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to int
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(int); ok {
+			if v != expected {
+				t.Errorf("int conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not int")
+		}
+	})
 }
 func TestInt32(t *testing.T) {
 	//Get the conversion function for int32
@@ -34,10 +45,21 @@ func TestInt32(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(int32) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to int32
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(int32); ok {
+			if v != int32(expected) {
+				t.Errorf("int32 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not int32")
+		}
+	})
 }
 
 func TestInt64(t *testing.T) {
@@ -52,10 +74,21 @@ func TestInt64(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(int64) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to int64
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(int64); ok {
+			if v != int64(expected) {
+				t.Errorf("int64 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not int64")
+		}
+	})
 }
 func TestUInt(t *testing.T) {
 	//Get the conversion function for uint
@@ -69,10 +102,21 @@ func TestUInt(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(uint) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to uint
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(uint); ok {
+			if v != uint(expected) {
+				t.Errorf("uint conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not uint")
+		}
+	})
 }
 
 func TestUInt8(t *testing.T) {
@@ -87,10 +131,21 @@ func TestUInt8(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(uint8) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to uint8
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(uint8); ok {
+			if v != uint8(expected) {
+				t.Errorf("uint8 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not uint8")
+		}
+	})
 }
 
 func TestUInt16(t *testing.T) {
@@ -105,10 +160,21 @@ func TestUInt16(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(uint16) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to uint16
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(uint16); ok {
+			if v != uint16(expected) {
+				t.Errorf("uint16 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not uint16")
+		}
+	})
 }
 
 func TestUInt32(t *testing.T) {
@@ -123,10 +189,21 @@ func TestUInt32(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(uint32) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to uint32
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(uint32); ok {
+			if v != uint32(expected) {
+				t.Errorf("uint32 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not uint32")
+		}
+	})
 }
 
 func TestUInt64(t *testing.T) {
@@ -141,10 +218,21 @@ func TestUInt64(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(uint64) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to uint64
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(uint64); ok {
+			if v != uint64(expected) {
+				t.Errorf("uint64 conversion expected %d, got %d", expected, v)
+			}
+		} else {
+			t.Error("value is not uint64")
+		}
+	})
 }
 
 func TestFloat32(t *testing.T) {
@@ -159,10 +247,21 @@ func TestFloat32(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(float32) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to float32
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(float32); ok {
+			if v != float32(expected) {
+				t.Errorf("float32 conversion expected %d, got %f", expected, v)
+			}
+		} else {
+			t.Error("value is not float32")
+		}
+	})
 }
 
 func TestFloat64(t *testing.T) {
@@ -177,13 +276,25 @@ func TestFloat64(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	answer := testGetAnswer(t, convFunc)
+	answer := testMathsFunctions(t, convFunc)
 	if answer[0] != expected[0].(float64) {
 		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
 	}
+
+	//test conversions to float64
+	testConversion(t, convFunc, func(value interface{}, expected int) {
+		if v, ok := value.(float64); ok {
+			if v != float64(expected) {
+				t.Errorf("float64 conversion expected %d, got %f", expected, v)
+			}
+		} else {
+			t.Error("value is not float64")
+		}
+	})
 }
 
-func testGetAnswer(t *testing.T, convFunc *Function) (answer []interface{}) {
+//testMathsFunction returns 24 as a interface{} with underlying concrete type per the convFunc
+func testMathsFunctions(t *testing.T, convFunc *Function) (answer []interface{}) {
 	//Get all of the basic maths Functions
 	add, err := GetFunction("add")
 	if err != nil {
@@ -206,27 +317,27 @@ func testGetAnswer(t *testing.T, convFunc *Function) (answer []interface{}) {
 		return
 	}
 	//Use conv to convert vars to the required type
-	init, err := convFunc.Exec(20)
+	init, err := convFunc.Exec(20) //initial 20
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	plus, err := convFunc.Exec(30) //50
+	plus, err := convFunc.Exec(30) //plus 30 = 50
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	minus, err := convFunc.Exec(10) //40
+	minus, err := convFunc.Exec(10) //minus 10 = 40
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	times, err := convFunc.Exec(3) //120
+	times, err := convFunc.Exec(3) //multiplied by 3 = 120
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	over, err := convFunc.Exec(5) //24
+	over, err := convFunc.Exec(5) //divded by 5 = 24
 	if err != nil {
 		t.Error(err)
 		return
@@ -255,94 +366,66 @@ func testGetAnswer(t *testing.T, convFunc *Function) (answer []interface{}) {
 	return
 }
 
-// func TestAdd(t *testing.T) {
-// 	add, err := GetFunction("add")
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	//int
-// 	sum, err := add.Exec(999994, 3)
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != 999997 {
-// 		t.Errorf("Expected 999997, got %d", sum[0])
-// 	}
-// 	//int32
-// 	sum, err = add.Exec(int32(999994), int32(3))
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != int32(999997) {
-// 		t.Errorf("Expected 999997, got %d", sum[0])
-// 	}
-// 	//int64
-// 	sum, err = add.Exec(int64(999994), int64(3))
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != int64(999997) {
-// 		t.Errorf("Expected 999997, got %d", sum[0])
-// 	}
+func testConversion(t *testing.T, convFunc *Function, validate func(value interface{}, expected int)) {
+	i, err := convFunc.Exec(int(99))
+	if err != nil {
+		t.Errorf("converting int to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(i[0], 99)
 
-// 	sum, err = add.Exec(float64(999994), 3.5)
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != 999997.5 {
-// 		t.Errorf("Expected 999997.5, got %f", sum[0])
-// 	}
-
-// 	sum, err = add.Exec(uint32(666), uint32(333))
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != uint32(999) {
-// 		t.Errorf("Expected 999, got %d", sum[0])
-// 	}
-// }
-
-// func TestAddUnmatchedTypes(t *testing.T) {
-// 	add, err := GetFunction("add")
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	_, err = add.Exec(float64(999994), int(5))
-// 	if err == nil {
-// 		t.Error(errors.New("This should have failed"))
-// 		return
-// 	}
-// 	// log.Println(sum[0], err)
-// }
-
-// func TestSubtract(t *testing.T) {
-// 	sub, err := GetFunction("subtract")
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	sum, err := sub.Exec(float64(999994), 3.5)
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != 999990.5 {
-// 		t.Errorf("Expected 999990.5, got %f", sum[0])
-// 	}
-
-// 	sum, err = sub.Exec(uint16(9994), uint16(9993))
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
-// 	if sum[0] != uint16(1) {
-// 		t.Errorf("Expected 1, got %f", sum[0])
-// 	}
-// }
+	i32, err := convFunc.Exec(int32(99))
+	if err != nil {
+		t.Errorf("converting int32 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(i32[0], 99)
+	i64, err := convFunc.Exec(int64(99))
+	if err != nil {
+		t.Errorf("converting int64 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(i64[0], 99)
+	ui, err := convFunc.Exec(uint(99))
+	if err != nil {
+		t.Errorf("converting uint to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(ui[0], 99)
+	ui8, err := convFunc.Exec(uint8(99))
+	if err != nil {
+		t.Errorf("converting uint8 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(ui8[0], 99)
+	ui16, err := convFunc.Exec(uint16(99))
+	if err != nil {
+		t.Errorf("converting uint16 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(ui16[0], 99)
+	ui32, err := convFunc.Exec(uint32(99))
+	if err != nil {
+		t.Errorf("converting uint32 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(ui32[0], 99)
+	ui64, err := convFunc.Exec(uint64(99))
+	if err != nil {
+		t.Errorf("converting uint64 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(ui64[0], 99)
+	f32, err := convFunc.Exec(float32(99))
+	if err != nil {
+		t.Errorf("converting float32 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(f32[0], 99)
+	f64, err := convFunc.Exec(float64(99))
+	if err != nil {
+		t.Errorf("converting float64 to %q: %s", convFunc.Name(), err)
+		return
+	}
+	validate(f64[0], 99)
+}
