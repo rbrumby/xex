@@ -63,7 +63,11 @@ func (f *Function) validate() (err error) {
 }
 
 //Exec executes the function implementation.
-//If the implementation does not return an error, error will always be nil.
+//It maps the input arguments to the implemtation arguments, returning an error if the number or types do not match.
+//The implementation return values are returned in results except for error.
+//If the implementaion's last return value is an error, it will be returned as the error returned from Exec (it will not be included in the results slice).
+//This way, error can be consistently checked whether the function cannot be called or if the functions implementation returns an error
+//(in both cases, this is reported by the error return value).
 func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) {
 	//defer recovers from reflect panicking in reflect.ValueOf(...).Call(...) returning an error if,
 	//for example arguments do not match the function implementation
