@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-//Set up built-in string functions
+//Set up built-in number functions
 func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
@@ -15,7 +15,7 @@ func registerNumberBuiltins() {
 			func(num1, num2 interface{}) (interface{}, error) {
 				switch n1 := num1.(type) {
 				//First make sure we got a number in num1
-				case int, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
 					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
 						return 0, fmt.Errorf("add cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
@@ -24,6 +24,10 @@ func registerNumberBuiltins() {
 					switch n2 := num2.(type) {
 					case int:
 						return n1.(int) + n2, nil
+					case int8:
+						return n1.(int8) + n2, nil
+					case int16:
+						return n1.(int16) + n2, nil
 					case int32:
 						return n1.(int32) + n2, nil
 					case int64:
@@ -56,7 +60,7 @@ func registerNumberBuiltins() {
 			func(num1, num2 interface{}) (interface{}, error) {
 				switch n1 := num1.(type) {
 				//First make sure we got a number in num1
-				case int, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
 					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
 						return 0, fmt.Errorf("subtract cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
@@ -65,6 +69,10 @@ func registerNumberBuiltins() {
 					switch n2 := num2.(type) {
 					case int:
 						return n1.(int) - n2, nil
+					case int8:
+						return n1.(int8) - n2, nil
+					case int16:
+						return n1.(int16) - n2, nil
 					case int32:
 						return n1.(int32) - n2, nil
 					case int64:
@@ -97,7 +105,7 @@ func registerNumberBuiltins() {
 			func(num1, num2 interface{}) (interface{}, error) {
 				switch n1 := num1.(type) {
 				//First make sure we got a number in num1
-				case int, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
 					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
 						return 0, fmt.Errorf("multiply cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
@@ -106,6 +114,10 @@ func registerNumberBuiltins() {
 					switch n2 := num2.(type) {
 					case int:
 						return n1.(int) * n2, nil
+					case int8:
+						return n1.(int8) * n2, nil
+					case int16:
+						return n1.(int16) * n2, nil
 					case int32:
 						return n1.(int32) * n2, nil
 					case int64:
@@ -138,7 +150,7 @@ func registerNumberBuiltins() {
 			func(num1, num2 interface{}) (interface{}, error) {
 				switch n1 := num1.(type) {
 				//First make sure we got a number in num1
-				case int, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
 					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
 						return 0, fmt.Errorf("divide cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
@@ -147,6 +159,10 @@ func registerNumberBuiltins() {
 					switch n2 := num2.(type) {
 					case int:
 						return n1.(int) / n2, nil
+					case int8:
+						return n1.(int8) / n2, nil
+					case int16:
+						return n1.(int16) / n2, nil
 					case int32:
 						return n1.(int32) / n2, nil
 					case int64:
@@ -175,7 +191,7 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"pow",
-			`pow returns x to the power of y (x**y)`,
+			`pow returns x to the power of y (x**y).`,
 			math.Pow,
 		),
 	)
@@ -183,7 +199,7 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"mod",
-			`mod returns the remainder of x/y`,
+			`mod returns the remainder of x/y.`,
 			math.Mod,
 		),
 	)
@@ -196,6 +212,10 @@ func registerNumberBuiltins() {
 				switch num := number.(type) {
 				case int:
 					return num, nil
+				case int8:
+					return int(num), nil
+				case int16:
+					return int(num), nil
 				case int32:
 					return int(num), nil
 				case int64:
@@ -222,14 +242,90 @@ func registerNumberBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
+			"int8",
+			`int8 converts the passed in value to an int8 or returns a error if conversion isn't possible`,
+			func(number interface{}) (int8, error) {
+				switch num := number.(type) {
+				case int:
+					return int8(num), nil
+				case int8:
+					return num, nil
+				case int16:
+					return int8(num), nil
+				case int32:
+					return int8(num), nil
+				case int64:
+					return int8(num), nil
+				case uint:
+					return int8(num), nil
+				case uint8:
+					return int8(num), nil
+				case uint16:
+					return int8(num), nil
+				case uint32:
+					return int8(num), nil
+				case uint64:
+					return int8(num), nil
+				case float32:
+					return int8(num), nil
+				case float64:
+					return int8(num), nil
+				}
+				return 0, fmt.Errorf("Cannot convert %s to int8", reflect.TypeOf(number).Name())
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
+			"int16",
+			`int16 converts the passed in value to an int16 or returns a error if conversion isn't possible`,
+			func(number interface{}) (int16, error) {
+				switch num := number.(type) {
+				case int:
+					return int16(num), nil
+				case int8:
+					return int16(num), nil
+				case int16:
+					return num, nil
+				case int32:
+					return int16(num), nil
+				case int64:
+					return int16(num), nil
+				case uint:
+					return int16(num), nil
+				case uint8:
+					return int16(num), nil
+				case uint16:
+					return int16(num), nil
+				case uint32:
+					return int16(num), nil
+				case uint64:
+					return int16(num), nil
+				case float32:
+					return int16(num), nil
+				case float64:
+					return int16(num), nil
+				}
+				return 0, fmt.Errorf("Cannot convert %s to int16", reflect.TypeOf(number).Name())
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
 			"int32",
 			`int32 converts the passed in value to an int32 or returns a error if conversion isn't possible`,
 			func(number interface{}) (int32, error) {
 				switch num := number.(type) {
-				case int32:
-					return num, nil
 				case int:
 					return int32(num), nil
+				case int8:
+					return int32(num), nil
+				case int16:
+					return int32(num), nil
+				case int32:
+					return num, nil
 				case int64:
 					return int32(num), nil
 				case uint:
@@ -258,12 +354,16 @@ func registerNumberBuiltins() {
 			`int converts the passed in value to an int or returns a error if conversion isn't possible`,
 			func(number interface{}) (int64, error) {
 				switch num := number.(type) {
-				case int64:
-					return num, nil
 				case int:
+					return int64(num), nil
+				case int8:
+					return int64(num), nil
+				case int16:
 					return int64(num), nil
 				case int32:
 					return int64(num), nil
+				case int64:
+					return num, nil
 				case uint:
 					return int64(num), nil
 				case uint8:
@@ -290,14 +390,18 @@ func registerNumberBuiltins() {
 			`uint converts the passed in value to a uint or returns a error if conversion isn't possible`,
 			func(number interface{}) (uint, error) {
 				switch num := number.(type) {
-				case uint:
-					return num, nil
 				case int:
+					return uint(num), nil
+				case int8:
+					return uint(num), nil
+				case int16:
 					return uint(num), nil
 				case int32:
 					return uint(num), nil
 				case int64:
 					return uint(num), nil
+				case uint:
+					return num, nil
 				case uint8:
 					return uint(num), nil
 				case uint16:
@@ -322,9 +426,11 @@ func registerNumberBuiltins() {
 			`uint8 converts the passed in value to a uint8 or returns a error if conversion isn't possible`,
 			func(number interface{}) (uint8, error) {
 				switch num := number.(type) {
-				case uint8:
-					return num, nil
 				case int:
+					return uint8(num), nil
+				case int8:
+					return uint8(num), nil
+				case int16:
 					return uint8(num), nil
 				case int32:
 					return uint8(num), nil
@@ -332,6 +438,8 @@ func registerNumberBuiltins() {
 					return uint8(num), nil
 				case uint:
 					return uint8(num), nil
+				case uint8:
+					return num, nil
 				case uint16:
 					return uint8(num), nil
 				case uint32:
@@ -354,18 +462,22 @@ func registerNumberBuiltins() {
 			`uint16 converts the passed in value to a uint16 or returns a error if conversion isn't possible`,
 			func(number interface{}) (uint16, error) {
 				switch num := number.(type) {
-				case uint16:
-					return num, nil
 				case int:
+					return uint16(num), nil
+				case int8:
+					return uint16(num), nil
+				case int16:
 					return uint16(num), nil
 				case int32:
 					return uint16(num), nil
 				case int64:
 					return uint16(num), nil
-				case uint8:
-					return uint16(num), nil
 				case uint:
 					return uint16(num), nil
+				case uint8:
+					return uint16(num), nil
+				case uint16:
+					return num, nil
 				case uint32:
 					return uint16(num), nil
 				case uint64:
@@ -386,9 +498,11 @@ func registerNumberBuiltins() {
 			`uint32 converts the passed in value to a uint32 or returns a error if conversion isn't possible`,
 			func(number interface{}) (uint32, error) {
 				switch num := number.(type) {
-				case uint32:
-					return num, nil
 				case int:
+					return uint32(num), nil
+				case int8:
+					return uint32(num), nil
+				case int16:
 					return uint32(num), nil
 				case int32:
 					return uint32(num), nil
@@ -400,6 +514,8 @@ func registerNumberBuiltins() {
 					return uint32(num), nil
 				case uint16:
 					return uint32(num), nil
+				case uint32:
+					return num, nil
 				case uint64:
 					return uint32(num), nil
 				case float32:
@@ -419,9 +535,11 @@ func registerNumberBuiltins() {
 
 			func(number interface{}) (uint64, error) {
 				switch num := number.(type) {
-				case uint64:
-					return num, nil
 				case int:
+					return uint64(num), nil
+				case int8:
+					return uint64(num), nil
+				case int16:
 					return uint64(num), nil
 				case int32:
 					return uint64(num), nil
@@ -435,6 +553,8 @@ func registerNumberBuiltins() {
 					return uint64(num), nil
 				case uint32:
 					return uint64(num), nil
+				case uint64:
+					return num, nil
 				case float32:
 					return uint64(num), nil
 				case float64:
@@ -451,9 +571,11 @@ func registerNumberBuiltins() {
 			`float converts the passed in value to a float32 or returns a error if conversion isn't possible`,
 			func(number interface{}) (float32, error) {
 				switch num := number.(type) {
-				case float32:
-					return num, nil
 				case int:
+					return float32(num), nil
+				case int8:
+					return float32(num), nil
+				case int16:
 					return float32(num), nil
 				case int32:
 					return float32(num), nil
@@ -469,6 +591,8 @@ func registerNumberBuiltins() {
 					return float32(num), nil
 				case uint64:
 					return float32(num), nil
+				case float32:
+					return num, nil
 				case float64:
 					return float32(num), nil
 				}
@@ -483,9 +607,11 @@ func registerNumberBuiltins() {
 			`float64 converts the passed in value to a float64 or returns a error if conversion isn't possible`,
 			func(number interface{}) (float64, error) {
 				switch num := number.(type) {
-				case float64:
-					return num, nil
 				case int:
+					return float64(num), nil
+				case int8:
+					return float64(num), nil
+				case int16:
 					return float64(num), nil
 				case int32:
 					return float64(num), nil
@@ -503,6 +629,8 @@ func registerNumberBuiltins() {
 					return float64(num), nil
 				case float32:
 					return float64(num), nil
+				case float64:
+					return num, nil
 				}
 				return 0, fmt.Errorf("Cannot convert %s to float64", reflect.TypeOf(number).Name())
 			},

@@ -1,431 +1,1186 @@
 package xex
 
 import (
-	"fmt"
+	"math"
 	"testing"
 )
 
-func TestInt(t *testing.T) {
-	//Get the conversion function for int
-	convFunc, err := GetFunction("int")
+/////////////
+//int## types
+/////////////
+func TestIntConversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("int")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0].(int) != expected[0].(int) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to int
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(int); ok {
-			if v != expected {
-				t.Errorf("int conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not int")
-		}
-	})
-}
-func TestInt32(t *testing.T) {
-	//Get the conversion function for int32
-	convFunc, err := GetFunction("int32")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(int32) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to int32
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(int32); ok {
-			if v != int32(expected) {
-				t.Errorf("int32 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not int32")
-		}
-	})
-}
-
-func TestInt64(t *testing.T) {
-	//Get the conversion function for int64
-	convFunc, err := GetFunction("int64")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(int64) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to int64
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(int64); ok {
-			if v != int64(expected) {
-				t.Errorf("int64 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not int64")
-		}
-	})
-}
-func TestUInt(t *testing.T) {
-	//Get the conversion function for uint
-	convFunc, err := GetFunction("uint")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(uint) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to uint
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(uint); ok {
-			if v != uint(expected) {
-				t.Errorf("uint conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not uint")
-		}
-	})
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestUInt8(t *testing.T) {
-	//Get the conversion function for uint8
-	convFunc, err := GetFunction("uint8")
+func TestInt8Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("int8")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(uint8) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to uint8
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(uint8); ok {
-			if v != uint8(expected) {
-				t.Errorf("uint8 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not uint8")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestUInt16(t *testing.T) {
-	//Get the conversion function for uint16
-	convFunc, err := GetFunction("uint16")
+func TestInt16Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("int16")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(uint16) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to uint16
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(uint16); ok {
-			if v != uint16(expected) {
-				t.Errorf("uint16 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not uint16")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestUInt32(t *testing.T) {
-	//Get the conversion function for uint32
-	convFunc, err := GetFunction("uint32")
+func TestInt32Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("int32")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(uint32) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to uint32
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(uint32); ok {
-			if v != uint32(expected) {
-				t.Errorf("uint32 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not uint32")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestUInt64(t *testing.T) {
-	//Get the conversion function for uint64
-	convFunc, err := GetFunction("uint64")
+func TestInt64Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("int64")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(uint64) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to uint64
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(uint64); ok {
-			if v != uint64(expected) {
-				t.Errorf("uint64 conversion expected %d, got %d", expected, v)
-			}
-		} else {
-			t.Error("value is not uint64")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestFloat32(t *testing.T) {
-	//Get the conversion function for float32
-	convFunc, err := GetFunction("float32")
+//////////////
+//uint## types
+//////////////
+func TestUintConversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("uint")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(float32) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to float32
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(float32); ok {
-			if v != float32(expected) {
-				t.Errorf("float32 conversion expected %d, got %f", expected, v)
-			}
-		} else {
-			t.Error("value is not float32")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func TestFloat64(t *testing.T) {
-	//Get the conversion function for float64
-	convFunc, err := GetFunction("float64")
+func TestUint8Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("uint8")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	expected, err := convFunc.Exec(24)
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer := testMathsFunctions(t, convFunc)
-	if answer[0] != expected[0].(float64) {
-		t.Error(fmt.Errorf("Expected %v, got %v", expected[0], answer[0]))
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-
-	//test conversions to float64
-	testConversion(t, convFunc, func(value interface{}, expected int) {
-		if v, ok := value.(float64); ok {
-			if v != float64(expected) {
-				t.Errorf("float64 conversion expected %d, got %f", expected, v)
-			}
-		} else {
-			t.Error("value is not float64")
-		}
-	})
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-//testMathsFunction returns 24 as a interface{} with underlying concrete type per the convFunc
-func testMathsFunctions(t *testing.T, convFunc *Function) (answer []interface{}) {
-	//Get all of the basic maths Functions
-	add, err := GetFunction("add")
+func TestUint16Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("uint16")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
-	subtract, err := GetFunction("subtract")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	multiply, err := GetFunction("multiply")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	divide, err := GetFunction("divide")
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	//Use conv to convert vars to the required type
-	init, err := convFunc.Exec(20) //initial 20
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	plus, err := convFunc.Exec(30) //plus 30 = 50
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	minus, err := convFunc.Exec(10) //minus 10 = 40
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	times, err := convFunc.Exec(3) //multiplied by 3 = 120
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	over, err := convFunc.Exec(5) //divded by 5 = 24
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	//Do the maths
-	answer, err = add.Exec(init[0], plus[0])
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer, err = subtract.Exec(answer[0], minus[0])
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer, err = multiply.Exec(answer[0], times[0])
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	answer, err = divide.Exec(answer[0], over[0])
-	if err != nil {
-		t.Error(err)
-		return
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
 	}
-	return
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
 }
 
-func testConversion(t *testing.T, convFunc *Function, validate func(value interface{}, expected int)) {
-	i, err := convFunc.Exec(int(99))
+func TestUint32Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("uint32")
 	if err != nil {
-		t.Errorf("converting int to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(i[0], 99)
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
 
-	i32, err := convFunc.Exec(int32(99))
+func TestUint64Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("uint64")
 	if err != nil {
-		t.Errorf("converting int32 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(i32[0], 99)
-	i64, err := convFunc.Exec(int64(99))
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+///////////////
+//float## types
+///////////////
+func TestFloat32Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("float32")
 	if err != nil {
-		t.Errorf("converting int64 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(i64[0], 99)
-	ui, err := convFunc.Exec(uint(99))
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+func TestFloat64Conversions(t *testing.T) {
+	in := 7
+	fn, err := GetFunction("float64")
 	if err != nil {
-		t.Errorf("converting uint to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(ui[0], 99)
-	ui8, err := convFunc.Exec(uint8(99))
+	if res, err := fn.Exec(int(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(int64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint8(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint16(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(uint64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float32(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if res, err := fn.Exec(float64(in)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in) {
+		t.Fatalf("Expected %d, got %v", in, res[0])
+	}
+	if _, err := fn.Exec("not-a-number"); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+/////////////////
+//Maths functions
+/////////////////
+func TestAdd(t *testing.T) {
+	in1 := 7
+	in2 := 99
+	fn, err := GetFunction("add")
 	if err != nil {
-		t.Errorf("converting uint8 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(ui8[0], 99)
-	ui16, err := convFunc.Exec(uint16(99))
+	if res, err := fn.Exec(int(in1), int(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in1)+int(in2) {
+		t.Fatalf("Expected %d, got %v", int(in1)+int(in2), res[0])
+	}
+	if res, err := fn.Exec(int8(in1), int8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in1)+int8(in2) {
+		t.Fatalf("Expected %d, got %v", int8(in1)+int8(in2), res[0])
+	}
+	if res, err := fn.Exec(int16(in1), int16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in1)+int16(in2) {
+		t.Fatalf("Expected %d, got %v", int16(in1)+int16(in2), res[0])
+	}
+	if res, err := fn.Exec(int32(in1), int32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in1)+int32(in2) {
+		t.Fatalf("Expected %d, got %v", int32(in1)+int32(in2), res[0])
+	}
+	if res, err := fn.Exec(int64(in1), int64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in1)+int64(in2) {
+		t.Fatalf("Expected %d, got %v", int64(in1)+int64(in2), res[0])
+	}
+	if res, err := fn.Exec(uint(in1), uint(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in1)+uint(in2) {
+		t.Fatalf("Expected %d, got %v", uint(in1)+uint(in2), res[0])
+	}
+	if res, err := fn.Exec(uint8(in1), uint8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in1)+uint8(in2) {
+		t.Fatalf("Expected %d, got %v", uint8(in1)+uint8(in2), res[0])
+	}
+	if res, err := fn.Exec(uint16(in1), uint16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in1)+uint16(in2) {
+		t.Fatalf("Expected %d, got %v", uint16(in1)+uint16(in2), res[0])
+	}
+	if res, err := fn.Exec(uint32(in1), uint32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in1)+uint32(in2) {
+		t.Fatalf("Expected %d, got %v", uint32(in1)+uint32(in2), res[0])
+	}
+	if res, err := fn.Exec(uint64(in1), uint64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in1)+uint64(in2) {
+		t.Fatalf("Expected %d, got %v", uint64(in1)+uint64(in2), res[0])
+	}
+	if res, err := fn.Exec(float32(in1), float32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in1)+float32(in2) {
+		t.Fatalf("Expected %f, got %v", float32(in1)+float32(in2), res[0])
+	}
+	if res, err := fn.Exec(float64(in1), float64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in1)+float64(in2) {
+		t.Fatalf("Expected %f, got %v", float64(in1)+float64(in2), res[0])
+	}
+	if _, err := fn.Exec(int8(in1), int64(in2)); err == nil {
+		t.Fatal("Should have failed with different types")
+	}
+	if _, err := fn.Exec("not-a-number", 10); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+func TestSubtract(t *testing.T) {
+	in1 := 7
+	in2 := 99
+	fn, err := GetFunction("subtract")
 	if err != nil {
-		t.Errorf("converting uint16 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(ui16[0], 99)
-	ui32, err := convFunc.Exec(uint32(99))
+	if res, err := fn.Exec(int(in1), int(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in1)-int(in2) {
+		t.Fatalf("Expected %d, got %v", int(in1)-int(in2), res[0])
+	}
+	if res, err := fn.Exec(int8(in1), int8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in1)-int8(in2) {
+		t.Fatalf("Expected %d, got %v", int8(in1)-int8(in2), res[0])
+	}
+	if res, err := fn.Exec(int16(in1), int16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in1)-int16(in2) {
+		t.Fatalf("Expected %d, got %v", int16(in1)-int16(in2), res[0])
+	}
+	if res, err := fn.Exec(int32(in1), int32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in1)-int32(in2) {
+		t.Fatalf("Expected %d, got %v", int32(in1)-int32(in2), res[0])
+	}
+	if res, err := fn.Exec(int64(in1), int64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in1)-int64(in2) {
+		t.Fatalf("Expected %d, got %v", int64(in1)-int64(in2), res[0])
+	}
+	if res, err := fn.Exec(uint(in1), uint(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in1)-uint(in2) {
+		t.Fatalf("Expected %d, got %v", uint(in1)-uint(in2), res[0])
+	}
+	if res, err := fn.Exec(uint8(in1), uint8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in1)-uint8(in2) {
+		t.Fatalf("Expected %d, got %v", uint8(in1)-uint8(in2), res[0])
+	}
+	if res, err := fn.Exec(uint16(in1), uint16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in1)-uint16(in2) {
+		t.Fatalf("Expected %d, got %v", uint16(in1)-uint16(in2), res[0])
+	}
+	if res, err := fn.Exec(uint32(in1), uint32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in1)-uint32(in2) {
+		t.Fatalf("Expected %d, got %v", uint32(in1)-uint32(in2), res[0])
+	}
+	if res, err := fn.Exec(uint64(in1), uint64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in1)-uint64(in2) {
+		t.Fatalf("Expected %d, got %v", uint64(in1)-uint64(in2), res[0])
+	}
+	if res, err := fn.Exec(float32(in1), float32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in1)-float32(in2) {
+		t.Fatalf("Expected %f, got %v", float32(in1)-float32(in2), res[0])
+	}
+	if res, err := fn.Exec(float64(in1), float64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in1)-float64(in2) {
+		t.Fatalf("Expected %f, got %v", float64(in1)-float64(in2), res[0])
+	}
+	if _, err := fn.Exec(int8(in1), int64(in2)); err == nil {
+		t.Fatal("Should have failed with different types")
+	}
+	if _, err := fn.Exec("not-a-number", 10); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+func TestMultiply(t *testing.T) {
+	in1 := 7
+	in2 := 99
+	fn, err := GetFunction("multiply")
 	if err != nil {
-		t.Errorf("converting uint32 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(ui32[0], 99)
-	ui64, err := convFunc.Exec(uint64(99))
+	if res, err := fn.Exec(int(in1), int(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in1)*int(in2) {
+		t.Fatalf("Expected %d, got %v", int(in1)*int(in2), res[0])
+	}
+	if res, err := fn.Exec(int8(in1), int8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in1)*int8(in2) {
+		t.Fatalf("Expected %d, got %v", int8(in1)*int8(in2), res[0])
+	}
+	if res, err := fn.Exec(int16(in1), int16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in1)*int16(in2) {
+		t.Fatalf("Expected %d, got %v", int16(in1)*int16(in2), res[0])
+	}
+	if res, err := fn.Exec(int32(in1), int32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in1)*int32(in2) {
+		t.Fatalf("Expected %d, got %v", int32(in1)*int32(in2), res[0])
+	}
+	if res, err := fn.Exec(int64(in1), int64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in1)*int64(in2) {
+		t.Fatalf("Expected %d, got %v", int64(in1)*int64(in2), res[0])
+	}
+	if res, err := fn.Exec(uint(in1), uint(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in1)*uint(in2) {
+		t.Fatalf("Expected %d, got %v", uint(in1)*uint(in2), res[0])
+	}
+	if res, err := fn.Exec(uint8(in1), uint8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in1)*uint8(in2) {
+		t.Fatalf("Expected %d, got %v", uint8(in1)*uint8(in2), res[0])
+	}
+	if res, err := fn.Exec(uint16(in1), uint16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in1)*uint16(in2) {
+		t.Fatalf("Expected %d, got %v", uint16(in1)*uint16(in2), res[0])
+	}
+	if res, err := fn.Exec(uint32(in1), uint32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in1)*uint32(in2) {
+		t.Fatalf("Expected %d, got %v", uint32(in1)*uint32(in2), res[0])
+	}
+	if res, err := fn.Exec(uint64(in1), uint64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in1)*uint64(in2) {
+		t.Fatalf("Expected %d, got %v", uint64(in1)*uint64(in2), res[0])
+	}
+	if res, err := fn.Exec(float32(in1), float32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in1)*float32(in2) {
+		t.Fatalf("Expected %f, got %v", float32(in1)*float32(in2), res[0])
+	}
+	if res, err := fn.Exec(float64(in1), float64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in1)*float64(in2) {
+		t.Fatalf("Expected %f, got %v", float64(in1)*float64(in2), res[0])
+	}
+	if _, err := fn.Exec(int8(in1), int64(in2)); err == nil {
+		t.Fatal("Should have failed with different types")
+	}
+	if _, err := fn.Exec("not-a-number", 10); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+func TestDivide(t *testing.T) {
+	in1 := 7
+	in2 := 99
+	fn, err := GetFunction("divide")
 	if err != nil {
-		t.Errorf("converting uint64 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(ui64[0], 99)
-	f32, err := convFunc.Exec(float32(99))
+	if res, err := fn.Exec(int(in1), int(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int(in1)/int(in2) {
+		t.Fatalf("Expected %d, got %v", int(in1)/int(in2), res[0])
+	}
+	if res, err := fn.Exec(int8(in1), int8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int8(in1)/int8(in2) {
+		t.Fatalf("Expected %d, got %v", int8(in1)/int8(in2), res[0])
+	}
+	if res, err := fn.Exec(int16(in1), int16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int16(in1)/int16(in2) {
+		t.Fatalf("Expected %d, got %v", int16(in1)/int16(in2), res[0])
+	}
+	if res, err := fn.Exec(int32(in1), int32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int32(in1)/int32(in2) {
+		t.Fatalf("Expected %d, got %v", int32(in1)/int32(in2), res[0])
+	}
+	if res, err := fn.Exec(int64(in1), int64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != int64(in1)/int64(in2) {
+		t.Fatalf("Expected %d, got %v", int64(in1)/int64(in2), res[0])
+	}
+	if res, err := fn.Exec(uint(in1), uint(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint(in1)/uint(in2) {
+		t.Fatalf("Expected %d, got %v", uint(in1)/uint(in2), res[0])
+	}
+	if res, err := fn.Exec(uint8(in1), uint8(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint8(in1)/uint8(in2) {
+		t.Fatalf("Expected %d, got %v", uint8(in1)/uint8(in2), res[0])
+	}
+	if res, err := fn.Exec(uint16(in1), uint16(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint16(in1)/uint16(in2) {
+		t.Fatalf("Expected %d, got %v", uint16(in1)/uint16(in2), res[0])
+	}
+	if res, err := fn.Exec(uint32(in1), uint32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint32(in1)/uint32(in2) {
+		t.Fatalf("Expected %d, got %v", uint32(in1)/uint32(in2), res[0])
+	}
+	if res, err := fn.Exec(uint64(in1), uint64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != uint64(in1)/uint64(in2) {
+		t.Fatalf("Expected %d, got %v", uint64(in1)/uint64(in2), res[0])
+	}
+	if res, err := fn.Exec(float32(in1), float32(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float32(in1)/float32(in2) {
+		t.Fatalf("Expected %f, got %v", float32(in1)/float32(in2), res[0])
+	}
+	if res, err := fn.Exec(float64(in1), float64(in2)); err != nil {
+		t.Fatal(err)
+	} else if res[0] != float64(in1)/float64(in2) {
+		t.Fatalf("Expected %f, got %v", float64(in1)/float64(in2), res[0])
+	}
+	if _, err := fn.Exec(int8(in1), int64(in2)); err == nil {
+		t.Fatal("Should have failed with different types")
+	}
+	if _, err := fn.Exec("not-a-number", 10); err == nil {
+		t.Fatal("String to int should have failed")
+	}
+}
+
+func TestPow(t *testing.T) {
+	in1 := 2
+	in2 := 8
+	fn, err := GetFunction("pow")
 	if err != nil {
-		t.Errorf("converting float32 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(f32[0], 99)
-	f64, err := convFunc.Exec(float64(99))
+	res, err := fn.Exec(float64(in1), float64(in2))
 	if err != nil {
-		t.Errorf("converting float64 to %q: %s", convFunc.Name(), err)
-		return
+		t.Fatal(err)
 	}
-	validate(f64[0], 99)
+	if res[0] != math.Pow(2, 8) {
+		t.Fatalf("Expected %f, got %v", math.Pow(float64(in1), float64(in2)), res[0])
+	}
 }

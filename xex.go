@@ -90,20 +90,20 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 
 	//Pick the error out of the result slice if the last arg is an error.
 	//Errors are returned separately from the slice of values returned.
-	typ := reflect.TypeOf(f.impl)
-	if typ.Out(typ.NumOut()-1) == reflect.TypeOf((*error)(nil)).Elem() {
+	switch e := vres[len(vres)-1].Interface().(type) {
+	case error:
 		results = make([]interface{}, len(vres)-1)
 		for i, r := range vres[:len(results)] {
 			results[i] = r.Interface()
 		}
-		return results, err
+		err = e
+	default:
+		results = make([]interface{}, len(vres))
+		for i, r := range vres {
+			results[i] = r.Interface()
+		}
 	}
 
-	//Else just send all of the results back
-	results = make([]interface{}, len(vres))
-	for i, r := range vres {
-		results[i] = r.Interface()
-	}
 	return
 }
 

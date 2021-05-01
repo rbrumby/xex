@@ -45,6 +45,24 @@ func TestGetNonExistentFunction(t *testing.T) {
 	}
 }
 
+type myCustomError struct {
+	msg string
+}
+
+func (e myCustomError) Error() string {
+	return e.msg
+}
+
+func TestCustomErrorTypeFunction(t *testing.T) {
+	fn := NewFunction("fail", "always returns an error", func() (string, myCustomError) {
+		return "nothing", myCustomError{msg: "It always fails"}
+	})
+	_, err := fn.Exec()
+	if err == nil || err.Error() != "It always fails" {
+		t.Fatalf("Didn't get expected error. Got %q", err.Error())
+	}
+}
+
 func TestUnnamedFunction(t *testing.T) {
 	defer assertPanic(t)
 	_ = NewFunction("", "just a test", testFunc)
