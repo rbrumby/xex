@@ -8,6 +8,7 @@ import (
 
 func init() {
 	functions = make(map[string]*Function)
+	registerCoreBuiltins()
 	registerNumberBuiltins()
 	registerStringBuiltins()
 }
