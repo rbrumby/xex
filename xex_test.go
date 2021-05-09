@@ -6,8 +6,8 @@ import (
 )
 
 func TestLiteral(t *testing.T) {
-	l := &Literal{value: "testing123"}
-	e := &Expression{root: l}
+	l := NewLiteral("testing123")
+	e := NewExpression(l)
 	if e, err := e.Evaluate(struct{}{}); err != nil {
 		t.Fatal(err)
 	} else if e != "testing123" {
@@ -27,15 +27,10 @@ func TestProperty(t *testing.T) {
 		},
 	}
 
-	p := &Property{
-		name: "Sub",
-	}
+	p := NewProperty("Sub", nil)
 
-	ps := &Property{
-		name:   "Str2",
-		parent: p,
-	}
-	e := &Expression{root: ps}
+	ps := NewProperty("Str2", p)
+	e := NewExpression(ps)
 	result, err := e.Evaluate(x)
 	if err != nil {
 		t.Fatal(err)
@@ -74,17 +69,13 @@ func TestMethodCall(t *testing.T) {
 		},
 	}
 
-	eProp := &Property{name: "Engine"}
+	eProp := NewProperty("Engine", nil)
 
-	mphArg := &Literal{value: 30}
+	mphArg := NewLiteral(30)
 
-	rpm := &MethodCall{
-		name:      "GetRPM",
-		parent:    eProp,
-		arguments: []Node{mphArg},
-	}
+	rpm := NewMethodCall("GetRPM", eProp, []Node{mphArg}, 0)
 
-	exp := Expression{root: rpm}
+	exp := NewExpression(rpm)
 
 	res, err := exp.Evaluate(c)
 	if err != nil {
@@ -107,12 +98,11 @@ func TestFunctionCalls(t *testing.T) {
 		},
 	}
 
-	eProp := &Property{name: "Engine"}
+	eProp := NewProperty("Engine", nil)
 
-	gbProp := &Property{name: "Gearbox", parent: eProp}
+	gbProp := NewProperty("Gearbox", eProp)
 
-	gProp := &Property{name: "Gear", parent: gbProp}
-	gProp.SetParent(gbProp)
+	gProp := NewProperty("Gear", gbProp)
 
 	fnMultiply, err := GetFunction("multiply")
 	if err != nil {
@@ -128,22 +118,27 @@ func TestFunctionCalls(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fnDivideCall := FunctionCall{
-		function: fnDivide,
-		arguments: []Node{
-			&FunctionCall{
-				function: fnMultiply,
-				arguments: []Node{
-					&Literal{value: 30},
-					&Literal{value: 150}},
-			},
-			&FunctionCall{
-				function: fnInt,
-				arguments: []Node{
+	fnDivideCall := NewFunctionCall(
+		fnDivide,
+		[]Node{
+			NewFunctionCall(
+				fnMultiply,
+				[]Node{
+					NewLiteral(30),
+					NewLiteral(150),
+				},
+				0,
+			),
+			NewFunctionCall(
+				fnInt,
+				[]Node{
 					gProp,
 				},
-			}},
-	}
+				0,
+			),
+		},
+		0,
+	)
 
 	result, err := fnDivideCall.Evaluate(c)
 	if err != nil {
@@ -165,13 +160,15 @@ func TestPropertyOfMethodCall(t *testing.T) {
 		},
 	}
 
-	gearNode := &Property{
-		name: "Gear",
-		parent: &MethodCall{
-			name:      "GetGearBox",
-			arguments: nil,
-		},
-	}
+	gearNode := NewProperty(
+		"Gear",
+		NewMethodCall(
+			"GetGearBox",
+			nil, //no parent
+			nil, //no args
+			0,
+		),
+	)
 
 	gear, err := gearNode.Evaluate(c)
 	if err != nil {

@@ -15,6 +15,10 @@ type Expression struct {
 	root Node
 }
 
+func NewExpression(root Node) *Expression {
+	return &Expression{root}
+}
+
 func (e *Expression) Evaluate(object interface{}) (result interface{}, error error) {
 	return e.root.Evaluate(object)
 }
@@ -22,8 +26,12 @@ func (e *Expression) Evaluate(object interface{}) (result interface{}, error err
 //FunctionCall is a Node in the compiled expression tree which represents a call to a funtion with Nodes as its arguments.
 type FunctionCall struct {
 	function  *Function
-	index     int
 	arguments []Node
+	index     int
+}
+
+func NewFunctionCall(function *Function, arguments []Node, index int) *FunctionCall {
+	return &FunctionCall{function, arguments, index}
 }
 
 func (fc *FunctionCall) Name() string {
@@ -55,6 +63,10 @@ type Literal struct {
 	value interface{}
 }
 
+func NewLiteral(value interface{}) *Literal {
+	return &Literal{value}
+}
+
 func (l *Literal) Name() string {
 	return "literal"
 }
@@ -67,12 +79,12 @@ func (l *Literal) Evaluate(env interface{}) (interface{}, error) {
 type MethodCall struct {
 	name      string
 	parent    Node
-	index     int
 	arguments []Node
+	index     int
 }
 
-func (mc *MethodCall) SetParent(parent Node) {
-	mc.parent = parent
+func NewMethodCall(name string, parent Node, arguments []Node, index int) *MethodCall {
+	return &MethodCall{name, parent, arguments, index}
 }
 
 func (mc *MethodCall) Name() string {
@@ -145,8 +157,8 @@ type Property struct {
 	parent Node
 }
 
-func (p *Property) SetParent(parent Node) {
-	p.parent = parent
+func NewProperty(name string, parent Node) *Property {
+	return &Property{name, parent}
 }
 
 func (p *Property) Name() string {
