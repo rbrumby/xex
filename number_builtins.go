@@ -235,7 +235,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return int(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to int", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to int", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -271,7 +271,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return int8(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to int8", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to int8", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -307,7 +307,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return int16(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to int16", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to int16", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -343,7 +343,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return int32(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to int32", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to int32", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -379,7 +379,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return int64(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to int64", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to int64", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -415,7 +415,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return uint(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to uint", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to uint", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -451,7 +451,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return uint8(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to uint8", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to uint8", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -487,7 +487,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return uint16(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to uint16", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to uint16", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -523,7 +523,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return uint32(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to uint32", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to uint32", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -560,7 +560,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return uint64(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to uint64", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to uint64", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -596,7 +596,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return float32(num), nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to float32", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to float32", reflect.TypeOf(number).Name())
 			},
 		),
 	)
@@ -632,7 +632,7 @@ func registerNumberBuiltins() {
 				case float64:
 					return num, nil
 				}
-				return 0, fmt.Errorf("Cannot convert %s to float64", reflect.TypeOf(number).Name())
+				return 0, fmt.Errorf("cannot convert %s to float64", reflect.TypeOf(number).Name())
 			},
 		),
 	)

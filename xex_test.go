@@ -1,133 +1,153 @@
 package xex
 
 import (
-	"errors"
+	"reflect"
 	"testing"
 )
 
-func TestHappyPathRegisterGetAndExec(t *testing.T) {
-	RegisterFunction(
-		NewFunction("test", "just a test", testFunc),
-	)
-	f, err := GetFunction("test")
+func TestLiteral(t *testing.T) {
+	l := &Literal{value: "testing123"}
+	e := &Expression{root: l}
+	if e, err := e.Evaluate(struct{}{}); err != nil {
+		t.Fatal(err)
+	} else if e != "testing123" {
+		t.Fatalf("literal Eval() returned %v", e)
+	}
+}
+
+func TestProperty(t *testing.T) {
+	//our test graph
+	x := struct {
+		Str string
+		Sub struct{ Str2 string }
+	}{
+		Str: "something",
+		Sub: struct{ Str2 string }{
+			Str2: "somethingelse",
+		},
+	}
+
+	p := &Property{
+		name: "Sub",
+	}
+
+	ps := &Property{
+		name:   "Str2",
+		parent: p,
+	}
+	e := &Expression{root: ps}
+	result, err := e.Evaluate(x)
 	if err != nil {
 		t.Fatal(err)
-		return
 	}
-	if f.Name() != "test" || f.Documentation() != "just a test" {
-		t.Fatal("Function didn't contain expected values")
-	}
-	values, err := f.Exec("XXX")
-	if values[0] != "Hello world!" {
-		t.Fatalf("Expected \"Hello world!\", got %q", values[0])
+	if result != "somethingelse" {
+		t.Fatalf("Expect \"somethingelse\". Got %q", result)
 	}
 }
 
-func TestHappyPathRegisterGetAndExecNoError(t *testing.T) {
-	RegisterFunction(
-		NewFunction("testnoerr", "just another test", testFuncNoError),
-	)
-	f, err := GetFunction("testnoerr")
+type Car struct {
+	Engine Engine
+}
+
+type Engine struct {
+	Gearbox Gearbox
+}
+
+type Gearbox struct {
+	Gear uint8
+}
+
+func (e *Engine) GetRPM(mph int) (rpm int) {
+	return mph * 150 / int(e.Gearbox.Gear)
+}
+
+func TestMethodCall(t *testing.T) {
+	c := Car{
+		Engine: Engine{
+			Gearbox: Gearbox{
+				Gear: 4,
+			},
+		},
+	}
+
+	eProp := &Property{name: "Engine"}
+
+	mphArg := &Literal{value: 30}
+
+	rpm := &MethodCall{
+		name:      "GetRPM",
+		parent:    eProp,
+		arguments: []Node{mphArg},
+	}
+
+	exp := Expression{root: rpm}
+
+	res, err := exp.Evaluate(c)
 	if err != nil {
 		t.Fatal(err)
-		return
 	}
-	values, err := f.Exec()
-	if values[0] != "Hello world!" {
-		t.Fatalf("Expected \"Helloworld!\", got %q", values[0])
+	if reflect.TypeOf(res).Kind() != reflect.Int {
+		t.Fatal("RPM's are not an int")
 	}
-}
-
-func TestGetNonExistentFunction(t *testing.T) {
-	_, err := GetFunction("xxx")
-	if err == nil {
-		t.Fatal("sould have got error sayign function does not exist")
+	if res != 1125 {
+		t.Fatalf("Expected 1125, got %d", res)
 	}
 }
 
-type myCustomError struct {
-	msg string
-}
-
-func (e myCustomError) Error() string {
-	return e.msg
-}
-
-func TestCustomErrorTypeFunction(t *testing.T) {
-	fn := NewFunction("fail", "always returns an error", func() (string, myCustomError) {
-		return "nothing", myCustomError{msg: "It always fails"}
-	})
-	_, err := fn.Exec()
-	if err == nil || err.Error() != "It always fails" {
-		t.Fatalf("Didn't get expected error. Got %q", err.Error())
+func TestFunctionCall(t *testing.T) {
+	c := Car{
+		Engine: Engine{
+			Gearbox: Gearbox{
+				Gear: 4,
+			},
+		},
 	}
-}
 
-func TestUnnamedFunction(t *testing.T) {
-	defer assertPanic(t)
-	_ = NewFunction("", "just a test", testFunc)
-}
+	eProp := &Property{name: "Engine"}
 
-func TestDuplicateFunction(t *testing.T) {
-	defer assertPanic(t)
-	RegisterFunction(NewFunction("duplicate", "just a test", testFunc))
-	RegisterFunction(NewFunction("duplicate", "just a test", testFunc))
-}
+	gbProp := &Property{name: "Gearbox", parent: eProp}
 
-func TestNilFunctionImplementation(t *testing.T) {
-	defer assertPanic(t)
-	_ = NewFunction("test", "just a test", nil)
-}
+	gProp := &Property{name: "Gear", parent: gbProp}
+	gProp.SetParent(gbProp)
 
-func TestRegisterInternallyBrokenFunction(t *testing.T) {
-	defer assertPanic(t)
-	f := NewFunction("test", "just a test", testFuncNoError)
-	f.name = ""
-	RegisterFunction(f)
-}
-
-func TestCallInternallyBrokenFunction(t *testing.T) {
-	f := NewFunction("test", "just a test", testFuncNoError)
-	f.name = ""
-	_, err := f.Exec()
-	if err == nil {
+	fnMultiply, err := GetFunction("multiply")
+	if err != nil {
 		t.Fatal(err)
-		return
-	}
-}
-
-func TestIncorrectArgs(t *testing.T) {
-	f := NewFunction("test", "just a test", testFunc)
-	_, err := f.Exec(5)
-	if err == nil {
-		t.Fatal("Should have failed using int as string")
-		return
-	}
-	_, err = f.Exec("x", "y")
-	if err == nil {
-		t.Fatal("Should have failed with too many input arguments")
-		return
 	}
 
-}
-
-func assertPanic(t *testing.T) {
-	err := recover()
-	if err == nil {
-		t.Fatal("Should have panicked")
+	fnInt, err := GetFunction("int")
+	if err != nil {
+		t.Fatal(err)
 	}
 
-}
-
-func testFunc(val string) (out string, err error) {
-	if val == "" {
-		err = errors.New("A test error")
+	fnDivide, err := GetFunction("divide")
+	if err != nil {
+		t.Fatal(err)
 	}
-	out = "Hello world!"
-	return
-}
+	fnDivideCall := FunctionCall{
+		function: fnDivide,
+		arguments: []Node{
+			&FunctionCall{
+				function: fnMultiply,
+				arguments: []Node{
+					&Literal{value: 30},
+					&Literal{value: 150}},
+			},
+			&FunctionCall{
+				function: fnInt,
+				arguments: []Node{
+					gProp,
+				},
+			}},
+	}
 
-func testFuncNoError() (out string) {
-	out = "Hello world!"
-	return
+	result, err := fnDivideCall.Evaluate(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result != 1125 {
+		t.Fatalf("Expected 1125, got %d", result)
+	}
+
 }

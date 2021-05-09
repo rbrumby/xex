@@ -104,3 +104,19 @@ func TestDecode(t *testing.T) {
 		t.Fatalf(`expected "default", got %q`, res[0])
 	}
 }
+
+func TestNot(t *testing.T) {
+	fn, err := GetFunction("not")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := fn.Exec(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res[0] != true {
+		t.Fatalf(`expected true, got %t`, res[0])
+	}
+
+}

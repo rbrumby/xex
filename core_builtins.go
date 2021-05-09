@@ -57,4 +57,14 @@ func registerCoreBuiltins() {
 		),
 	)
 
+	RegisterFunction(
+		NewFunction(
+			"not",
+			`Accepts a boolean & returns its inverse`,
+			func(value bool) bool {
+				return !value
+			},
+		),
+	)
+
 }
