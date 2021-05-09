@@ -61,6 +61,10 @@ func (e *Engine) GetRPM(mph int) (rpm int) {
 	return mph * 150 / int(e.Gearbox.Gear)
 }
 
+func (c Car) GetGearBox() Gearbox {
+	return c.Engine.Gearbox
+}
+
 func TestMethodCall(t *testing.T) {
 	c := Car{
 		Engine: Engine{
@@ -94,7 +98,7 @@ func TestMethodCall(t *testing.T) {
 	}
 }
 
-func TestFunctionCall(t *testing.T) {
+func TestFunctionCalls(t *testing.T) {
 	c := Car{
 		Engine: Engine{
 			Gearbox: Gearbox{
@@ -150,4 +154,31 @@ func TestFunctionCall(t *testing.T) {
 		t.Fatalf("Expected 1125, got %d", result)
 	}
 
+}
+
+func TestPropertyOfMethodCall(t *testing.T) {
+	c := Car{
+		Engine: Engine{
+			Gearbox: Gearbox{
+				Gear: 4,
+			},
+		},
+	}
+
+	gearNode := &Property{
+		name: "Gear",
+		parent: &MethodCall{
+			name:      "GetGearBox",
+			arguments: nil,
+		},
+	}
+
+	gear, err := gearNode.Evaluate(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if gear != uint8(4) {
+		t.Fatalf("Expected gear 4, got %d", gear)
+	}
 }

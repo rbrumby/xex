@@ -86,11 +86,11 @@ func (mc *MethodCall) Index() int {
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
 //It will call Evaluate on the parent & the arguments passed to the MethodCall before invoking the underlying method.
 func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) {
-	defer func() {
-		if recv := recover(); recv != nil {
-			err = fmt.Errorf("method %s: %s", mc.Name(), recv)
-		}
-	}()
+	// defer func() {
+	// 	if recv := recover(); recv != nil {
+	// 		err = fmt.Errorf("method %s: %s", mc.Name(), recv)
+	// 	}
+	// }()
 
 	args := make([]reflect.Value, len(mc.arguments))
 	for i, argNode := range mc.arguments {
@@ -101,12 +101,14 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 		args[i] = reflect.ValueOf(arg)
 	}
 
-	if mc.parent == nil {
-		return nil, fmt.Errorf("method %s: method has null parent", mc.name)
-	}
-	parent, err := mc.parent.Evaluate(env)
-	if err != nil {
-		return nil, fmt.Errorf("method %s: %s", mc.name, err)
+	//Assume no parent so set parent to top-level env
+	parent := env
+	if mc.parent != nil {
+		//override parent as one is set
+		parent, err = mc.parent.Evaluate(env)
+		if err != nil {
+			return nil, fmt.Errorf("method %s: %s", mc.name, err)
+		}
 	}
 	meth := reflect.ValueOf(parent).MethodByName(mc.name)
 	if !meth.IsValid() {
@@ -120,7 +122,11 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 			meth = ptr.MethodByName(mc.name)
 		}
 		if !meth.IsValid() {
-			err = fmt.Errorf("%s does not have method %s", mc.parent.Name(), mc.name)
+			if mc.parent == nil {
+				err = fmt.Errorf("top level object does not have method %s", mc.name)
+			} else {
+				err = fmt.Errorf("%s does not have method %s", mc.parent.Name(), mc.name)
+			}
 			return
 		}
 	}
@@ -150,14 +156,17 @@ func (p *Property) Name() string {
 //Evaluate will evaluate the chain of parent nodes if parent is not null.
 //If parent is null it will evaluate the proprty from the env object.
 func (p *Property) Evaluate(env interface{}) (result interface{}, err error) {
-	defer func() {
-		if recv := recover(); recv != nil {
-			err = fmt.Errorf("property %s: %s", p.Name(), recv)
-		}
-	}()
+	// defer func() {
+	// 	if recv := recover(); recv != nil {
+	// 		err = fmt.Errorf("property %s: %s", p.Name(), recv)
+	// 	}
+	// }()
 	if p.parent == nil {
 		//No parent, this is a top-level property reference - use env
 		field := reflect.ValueOf(env).FieldByName(p.Name())
+		if !field.IsValid() {
+			return nil, fmt.Errorf("field %s not found on %s", p.Name(), p.parent.Name())
+		}
 		if (field == reflect.Value{}) {
 			return nil, fmt.Errorf("property %s: not found", p.Name())
 		}
