@@ -42,6 +42,12 @@ func TestProperty(t *testing.T) {
 
 type Car struct {
 	Engine Engine
+	Driver *Driver
+}
+
+type Driver struct {
+	Name *string
+	Age  int
 }
 
 type Engine struct {
@@ -177,5 +183,28 @@ func TestPropertyOfMethodCall(t *testing.T) {
 
 	if gear != uint8(4) {
 		t.Fatalf("Expected gear 4, got %d", gear)
+	}
+}
+
+func TestPropertiesWithPointers(t *testing.T) {
+	name := "Stig"
+	c := Car{
+		Driver: &Driver{
+			Name: &name,
+			Age:  999,
+		},
+	}
+
+	d := NewProperty("Driver", nil)
+	n := NewProperty("Name", d)
+
+	ex := NewExpression(n)
+
+	res, err := ex.Evaluate(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *res.(*string) != "Stig" {
+		t.Fatalf("Expected Stig, got %s", res)
 	}
 }

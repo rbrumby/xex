@@ -47,13 +47,13 @@ func (fc FunctionCall) Evaluate(object interface{}) (interface{}, error) {
 	for i, argNode := range fc.arguments {
 		arg, err := argNode.Evaluate(object)
 		if err != nil {
-			return nil, fmt.Errorf("function %s: %s", fc.function.Name(), err)
+			return nil, fmt.Errorf("function %q: %s", fc.function.Name(), err)
 		}
 		args[i] = arg
 	}
 	results, err := fc.function.Exec(args...)
 	if err != nil {
-		return nil, fmt.Errorf("function %s: %s", fc.function.Name(), err)
+		return nil, fmt.Errorf("function %q: %s", fc.function.Name(), err)
 	}
 	return results[fc.Index()], nil
 }
@@ -68,7 +68,7 @@ func NewLiteral(value interface{}) *Literal {
 }
 
 func (l *Literal) Name() string {
-	return "literal"
+	return "<literal>"
 }
 
 func (l *Literal) Evaluate(env interface{}) (interface{}, error) {
@@ -98,17 +98,11 @@ func (mc *MethodCall) Index() int {
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
 //It will call Evaluate on the parent & the arguments passed to the MethodCall before invoking the underlying method.
 func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) {
-	// defer func() {
-	// 	if recv := recover(); recv != nil {
-	// 		err = fmt.Errorf("method %s: %s", mc.Name(), recv)
-	// 	}
-	// }()
-
 	args := make([]reflect.Value, len(mc.arguments))
 	for i, argNode := range mc.arguments {
 		arg, err := argNode.Evaluate(env)
 		if err != nil {
-			return nil, fmt.Errorf("method %s: %s", mc.name, err)
+			return nil, fmt.Errorf("method %q: %s", mc.name, err)
 		}
 		args[i] = reflect.ValueOf(arg)
 	}
@@ -116,7 +110,8 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 	//Assume no parent so set parent to top-level env
 	parent := env
 	if mc.parent != nil {
-		//override parent as one is set
+		//A parent Node is configured on this methodCall (the method is not on the top level env object)
+		//Evaluate the parent Node & use its result in place of the top level env.
 		parent, err = mc.parent.Evaluate(env)
 		if err != nil {
 			return nil, fmt.Errorf("method %s: %s", mc.name, err)
@@ -124,9 +119,8 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 	}
 	meth := reflect.ValueOf(parent).MethodByName(mc.name)
 	if !meth.IsValid() {
+		//The method isn't valid - maybe the method has a pointer receiver?
 		//If parent isn't already a pointer, try creating one & getting the method on it.
-		//This handles situations where the method has a pointer receiver but the object in the graph is not a pointer.
-		//Probably bad code in the first place but we can handle it so why not!
 		if reflect.ValueOf(parent).Kind() != reflect.Ptr {
 			parentVal := reflect.ValueOf(parent)
 			ptr := reflect.New(parentVal.Type())
@@ -134,10 +128,11 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 			meth = ptr.MethodByName(mc.name)
 		}
 		if !meth.IsValid() {
+			//The method still isn't valid after trying a pointer receiver
 			if mc.parent == nil {
-				err = fmt.Errorf("top level object does not have method %s", mc.name)
+				err = fmt.Errorf("top level object does not have method %q", mc.name)
 			} else {
-				err = fmt.Errorf("%s does not have method %s", mc.parent.Name(), mc.name)
+				err = fmt.Errorf("%s does not have method %q", mc.parent.Name(), mc.name)
 			}
 			return
 		}
@@ -166,34 +161,32 @@ func (p *Property) Name() string {
 }
 
 //Evaluate will evaluate the chain of parent nodes if parent is not null.
-//If parent is null it will evaluate the proprty from the env object.
+//If parent is null it will evaluate the property from the env object.
 func (p *Property) Evaluate(env interface{}) (result interface{}, err error) {
-	// defer func() {
-	// 	if recv := recover(); recv != nil {
-	// 		err = fmt.Errorf("property %s: %s", p.Name(), recv)
-	// 	}
-	// }()
 	if p.parent == nil {
 		//No parent, this is a top-level property reference - use env
-		field := reflect.ValueOf(env).FieldByName(p.Name())
-		if !field.IsValid() {
-			return nil, fmt.Errorf("field %s not found on %s", p.Name(), p.parent.Name())
-		}
-		if (field == reflect.Value{}) {
-			return nil, fmt.Errorf("property %s: not found", p.Name())
-		}
-		result = field.Interface()
-		return
+		return p.evaluate(env)
 	}
-	//Evaluate parent & then extract the property from the result.
-	parent, err := p.parent.Evaluate(env)
+	res, err := p.parent.Evaluate(env)
 	if err != nil {
-		return nil, fmt.Errorf("property %s: %s", p.Name(), err)
+		return nil, fmt.Errorf("error evaluating parent of %q: %s", p.Name(), err)
 	}
-	field := reflect.ValueOf(parent).FieldByName(p.Name())
-	if (field == reflect.Value{}) {
-		return nil, fmt.Errorf("property %s: not found", p.Name())
+	return p.evaluate(res)
+}
+
+//evaluate does the real evaluation dereferencing pointers along the way.
+func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
+	var propVal reflect.Value
+	if reflect.ValueOf(env).Kind() == reflect.Ptr {
+		//use the dereferenced value
+		propVal = reflect.ValueOf(reflect.ValueOf(env).Elem().Interface()).FieldByName(p.Name())
+	} else {
+		propVal = reflect.ValueOf(env).FieldByName(p.Name())
 	}
-	result = field.Interface()
+	if !propVal.IsValid() {
+		return nil, fmt.Errorf("property %q not found", p.Name())
+	}
+	result = propVal.Interface()
 	return
+
 }
