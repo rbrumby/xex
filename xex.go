@@ -47,13 +47,13 @@ func (fc FunctionCall) Evaluate(object interface{}) (interface{}, error) {
 	for i, argNode := range fc.arguments {
 		arg, err := argNode.Evaluate(object)
 		if err != nil {
-			return nil, fmt.Errorf("function %q: %s", fc.function.Name(), err)
+			return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
 		}
 		args[i] = arg
 	}
 	results, err := fc.function.Exec(args...)
 	if err != nil {
-		return nil, fmt.Errorf("function %q: %s", fc.function.Name(), err)
+		return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
 	}
 	return results[fc.Index()], nil
 }
@@ -102,7 +102,7 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 	for i, argNode := range mc.arguments {
 		arg, err := argNode.Evaluate(env)
 		if err != nil {
-			return nil, fmt.Errorf("method %q: %s", mc.name, err)
+			return nil, fmt.Errorf("method %q: %s", mc.Name(), err)
 		}
 		args[i] = reflect.ValueOf(arg)
 	}
@@ -114,10 +114,10 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 		//Evaluate the parent Node & use its result in place of the top level env.
 		parent, err = mc.parent.Evaluate(env)
 		if err != nil {
-			return nil, fmt.Errorf("method %s: %s", mc.name, err)
+			return nil, fmt.Errorf("method %s: %s", mc.Name(), err)
 		}
 	}
-	meth := reflect.ValueOf(parent).MethodByName(mc.name)
+	meth := reflect.ValueOf(parent).MethodByName(mc.Name())
 	if !meth.IsValid() {
 		//The method isn't valid - maybe the method has a pointer receiver?
 		//If parent isn't already a pointer, try creating one & getting the method on it.
@@ -125,14 +125,14 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 			parentVal := reflect.ValueOf(parent)
 			ptr := reflect.New(parentVal.Type())
 			ptr.Elem().Set(parentVal)
-			meth = ptr.MethodByName(mc.name)
+			meth = ptr.MethodByName(mc.Name())
 		}
 		if !meth.IsValid() {
 			//The method still isn't valid after trying a pointer receiver
 			if mc.parent == nil {
-				err = fmt.Errorf("top level object does not have method %q", mc.name)
+				err = fmt.Errorf("top level object does not have method %q", mc.Name())
 			} else {
-				err = fmt.Errorf("%s does not have method %q", mc.parent.Name(), mc.name)
+				err = fmt.Errorf("%s does not have method %q", mc.parent.Name(), mc.Name())
 			}
 			return
 		}

@@ -49,7 +49,7 @@ func TestHappyPathRegisterGetAndExecNoError(t *testing.T) {
 func TestGetNonExistentFunction(t *testing.T) {
 	_, err := GetFunction("xxx")
 	if err == nil {
-		t.Fatal("sould have got error sayign function does not exist")
+		t.Fatal("should have got error sayign function does not exist")
 	}
 }
 
@@ -74,6 +74,18 @@ func TestCustomErrorTypeFunction(t *testing.T) {
 func TestUnnamedFunction(t *testing.T) {
 	defer assertPanic(t)
 	_ = NewFunction("", "just a test", testFunc)
+}
+
+func TestInvalidFunctionName(t *testing.T) {
+	defer assertPanic(t)
+	_ = NewFunction("xy1_2+x", "just a test", testFunc)
+}
+
+func TestInvalidFuncNameregex(t *testing.T) {
+	defer assertPanic(t)
+	fn := NewFunction("valid", "just a test", testFunc)
+	fn.name = "in-valid"
+	fn.validate("regexpisinvalid(")
 }
 
 func TestDuplicateFunction(t *testing.T) {

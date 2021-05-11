@@ -95,6 +95,28 @@ func TestMethodCall(t *testing.T) {
 	}
 }
 
+func TestNonExistentMethodCall(t *testing.T) {
+	c := Car{
+		Engine: Engine{
+			Gearbox: Gearbox{
+				Gear: 4,
+			},
+		},
+	}
+	mc := NewMethodCall("not_exists", nil, nil, 0)
+	_, err := mc.Evaluate(c)
+	if err == nil {
+		t.Fatal("expected method not_exists doesn't exist error")
+	}
+
+	e := NewProperty("Engine", nil)
+	mc2 := NewMethodCall("not_exists", e, nil, 0)
+	_, err = mc2.Evaluate(c)
+	if err == nil {
+		t.Fatal("expected method not_exists doesn't exist error")
+	}
+}
+
 func TestFunctionCalls(t *testing.T) {
 	c := Car{
 		Engine: Engine{
@@ -207,4 +229,28 @@ func TestPropertiesWithPointers(t *testing.T) {
 	if *res.(*string) != "Stig" {
 		t.Fatalf("Expected Stig, got %s", res)
 	}
+}
+
+func TestEnvAsPointer(t *testing.T) {
+	name := "Stig"
+	c := Car{
+		Driver: &Driver{
+			Name: &name,
+			Age:  999,
+		},
+	}
+
+	d := NewProperty("Driver", nil)
+	n := NewProperty("Name", d)
+
+	ex := NewExpression(n)
+
+	res, err := ex.Evaluate(&c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *res.(*string) != "Stig" {
+		t.Fatalf("Expected Stig, got %s", res)
+	}
+
 }

@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 )
 
 var functions map[string]*Function
+
+const FuncNameRegex = "^[a-z][a-z0-9_]*$"
 
 func init() {
 	functions = make(map[string]*Function)
@@ -24,15 +27,12 @@ type Function struct {
 
 //NewFunction returns a pointer to a new Function.
 func NewFunction(name string, documentation string, implementation interface{}) *Function {
-	if name == "" {
-		panic(errors.New("attempt to create unnamed function"))
-	}
 	f := Function{
 		name:          name,
 		documentation: documentation,
 		impl:          implementation,
 	}
-	if err := f.validate(); err != nil {
+	if err := f.validate(FuncNameRegex); err != nil {
 		panic(err)
 	}
 	return &f
@@ -47,10 +47,17 @@ func (f *Function) Documentation() string {
 }
 
 //validate validates that the Function implementation
-func (f *Function) validate() (err error) {
+func (f *Function) validate(fNameRegex string) (err error) {
 	if f.Name() == "" {
 		err = fmt.Errorf("attempt to use unnamed function")
 		return
+	}
+	if ok, err := regexp.MatchString(fNameRegex, f.name); !ok {
+		if err != nil {
+			panic(fmt.Errorf("error applying regexp %q to %q: %s", fNameRegex, f.name, err))
+		}
+		panic(fmt.Errorf("invalid function name %q: function names may contain only lower-case letters, numbers & underscores"+
+			" & must begin with a letter (must match regular expression %q)", f.name, fNameRegex))
 	}
 	if f.impl == nil || reflect.TypeOf(f.impl).Kind() != reflect.Func {
 		err = fmt.Errorf("implementation of %q is not a Go function", f.Name())
@@ -74,7 +81,7 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 		}
 	}()
 
-	if err = f.validate(); err != nil {
+	if err = f.validate(FuncNameRegex); err != nil {
 		return
 	}
 
@@ -107,7 +114,7 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 //RegisterFunction registers the functions name in a map so it can be obtained by name in an expression.
 //It will panic if the Function is not valid, or if a Function with that name is already registered.
 func RegisterFunction(f *Function) {
-	if err := f.validate(); err != nil {
+	if err := f.validate(FuncNameRegex); err != nil {
 		panic(errors.New("attempt to register unnamed or unimplemented function - a function must have a name & an implementation"))
 	}
 	if _, ok := functions[f.Name()]; ok {
