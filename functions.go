@@ -9,13 +9,14 @@ import (
 
 var functions map[string]*Function
 
-const FuncNameRegex = "^[a-z][a-z0-9_]*$"
+const FuncNameRegex = "^[a-z][a-zA-Z0-9_]*$"
 
 func init() {
 	functions = make(map[string]*Function)
 	registerCoreBuiltins()
 	registerNumberBuiltins()
 	registerStringBuiltins()
+	registerCollectionBuiltins()
 }
 
 //Function represents a xex function which can be dynamically invoked.
@@ -89,7 +90,6 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 	for i, a := range args {
 		vargs[i] = reflect.ValueOf(a)
 	}
-
 	vres := reflect.ValueOf(f.impl).Call(vargs)
 
 	//Pick the error out of the result slice if the last arg is an error.

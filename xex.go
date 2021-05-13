@@ -3,7 +3,11 @@ package xex
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/coreos/capnslog"
 )
+
+var logger = capnslog.NewPackageLogger("github.com/rbrumby", "xex")
 
 //Node is a node in the compiled expression tree.
 type Node interface {
@@ -19,7 +23,11 @@ func NewExpression(root Node) *Expression {
 	return &Expression{root}
 }
 
-func (e *Expression) Evaluate(object interface{}) (result interface{}, error error) {
+func (e *Expression) Name() string {
+	return "<expression>"
+}
+
+func (e *Expression) Evaluate(object interface{}) (interface{}, error) {
 	return e.root.Evaluate(object)
 }
 
@@ -43,8 +51,14 @@ func (fc *FunctionCall) Index() int {
 }
 
 func (fc FunctionCall) Evaluate(object interface{}) (interface{}, error) {
+	logger.Debugf("FunctionCall %s evaluating %s = %v", fc.Name(), reflect.TypeOf(object).Name(), object)
 	args := make([]interface{}, len(fc.arguments))
 	for i, argNode := range fc.arguments {
+		if exp, ok := argNode.(*Expression); ok {
+			//The function expects an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
+			args[i] = exp
+			continue
+		}
 		arg, err := argNode.Evaluate(object)
 		if err != nil {
 			return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
@@ -132,7 +146,7 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 			if mc.parent == nil {
 				err = fmt.Errorf("top level object does not have method %q", mc.Name())
 			} else {
-				err = fmt.Errorf("%s does not have method %q", mc.parent.Name(), mc.Name())
+				err = fmt.Errorf("value retrieved from %s does not have method %q", mc.parent.Name(), mc.Name())
 			}
 			return
 		}

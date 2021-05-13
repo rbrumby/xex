@@ -1,0 +1,4 @@
+github.com/coreos/capnslog v0.0.0-20210511184746-73379a836f49 h1:pXMzsy5IRZR9eGqNMDqLtx33iwtb/NfPQRbUprGSWmQ=
+github.com/coreos/capnslog v0.0.0-20210511184746-73379a836f49/go.mod h1:kS03eufpm0LlfJAvTEfJ/Cx2NOehjZpD1axxBvcxwxs=
+github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf h1:iW4rZ826su+pqaw19uhpSCzhj44qo35pNgKFGqzDKkU=
+github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=

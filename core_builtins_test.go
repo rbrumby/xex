@@ -1,6 +1,8 @@
 package xex
 
-import "testing"
+import (
+	"testing"
+)
 
 type testSubStruct struct {
 	value string
@@ -73,14 +75,14 @@ func TestCount(t *testing.T) {
 	}
 }
 
-func TestDecode(t *testing.T) {
-	fn, err := GetFunction("decode")
+func TestSwitch(t *testing.T) {
+	fn, err := GetFunction("switch")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	values := []interface{}{"testval", "x", "y", "testval", testSubStruct{value: "answer"}}
-	res, err := fn.Exec(values)
+	res, err := fn.Exec(values...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +98,7 @@ func TestDecode(t *testing.T) {
 		"z", testSubStruct{value: "answer"},
 		"default",
 	}
-	res, err = fn.Exec(values)
+	res, err = fn.Exec(values...)
 	if err != nil {
 		t.Fatal(err)
 	}

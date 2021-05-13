@@ -33,14 +33,13 @@ func registerCoreBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
-			"decode",
-			`Tests the first value against the even-positioned values in the value pairs which follow: 
-			 If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned.
-			 And so on.
-			 If an even number of values are passed, the last value is not part of a pair and is
-			 therefore used as the default if non of the previous values match.
-			 If there is no default and no values matched, returns nil.`,
-			func(values []interface{}) interface{} {
+			"switch",
+			`Switches on the first value.
+			The following values are equivalent to "case : result" pairs.
+			If a final value is provided (an even number of arguments is passed), the final value is used as the default.
+			If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned. And so on.
+			If there is no default and no values matched, switch returns nil.`,
+			func(values ...interface{}) interface{} {
 				var dflt interface{}
 				if math.Mod(float64(len(values)), 2) == 0 {
 					//an even number of values was passed - the last value is the default
@@ -48,7 +47,7 @@ func registerCoreBuiltins() {
 					values = values[:len(values)-1]
 				}
 				for i := 1; i < len(values); i = i + 2 {
-					if values[0] == values[i] {
+					if values[i] == values[0] {
 						return values[i+1]
 					}
 				}
