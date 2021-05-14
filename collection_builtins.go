@@ -10,9 +10,10 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"select",
-			`input must be an array, slice or map from which each element is evaluated against exp.
-			If exp results in true (bool) for an element, that element is added to the returned 
-			slice or map containing the same type as the input. Note that if an array is passed, a slice is returned.
+			`input must be an array, slice or map from which each element is evaluated against exp
+			(in the case of a map, the value is evaluated not the key).
+			exp must return a bool. If exp results in true for an element, that element is added to the returned 
+			slice or map containing the same type as the input. Note that if an array is passed as input, a slice is returned.
 			`,
 			func(input interface{}, exp *Expression) (interface{}, error) {
 				var res reflect.Value
@@ -28,6 +29,8 @@ func registerCollectionBuiltins() {
 						}
 						if e, ok := eval.(bool); ok && e {
 							res = reflect.Append(res, reflect.ValueOf(input).Index(i))
+						} else if !ok {
+							return nil, fmt.Errorf("Expression passed to select must return bool not %s", reflect.TypeOf(eval).String())
 						}
 					}
 				case reflect.Map:

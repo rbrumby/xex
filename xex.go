@@ -7,7 +7,12 @@ import (
 	"github.com/coreos/capnslog"
 )
 
-var logger = capnslog.NewPackageLogger("github.com/rbrumby", "xex")
+var logger = capnslog.NewPackageLogger("github.com/rbrumby/xex", "xex")
+var Repolog capnslog.RepoLogger
+
+func init() {
+	Repolog = capnslog.MustRepoLogger("github.com/rbrumby/xex")
+}
 
 //Node is a node in the compiled expression tree.
 type Node interface {
@@ -51,12 +56,12 @@ func (fc *FunctionCall) Index() int {
 }
 
 func (fc FunctionCall) Evaluate(object interface{}) (interface{}, error) {
-	logger.Debugf("FunctionCall %s evaluating %s = %v", fc.Name(), reflect.TypeOf(object).Name(), object)
 	args := make([]interface{}, len(fc.arguments))
 	for i, argNode := range fc.arguments {
-		if exp, ok := argNode.(*Expression); ok {
+		if reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
+			reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
 			//The function expects an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
-			args[i] = exp
+			args[i] = argNode
 			continue
 		}
 		arg, err := argNode.Evaluate(object)
@@ -191,6 +196,10 @@ func (p *Property) Evaluate(env interface{}) (result interface{}, err error) {
 //evaluate does the real evaluation dereferencing pointers along the way.
 func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
 	var propVal reflect.Value
+	//If property name is null, return top-level env object
+	if p.Name() == "" {
+		return env, nil
+	}
 	if reflect.ValueOf(env).Kind() == reflect.Ptr {
 		//use the dereferenced value
 		propVal = reflect.ValueOf(reflect.ValueOf(env).Elem().Interface()).FieldByName(p.Name())

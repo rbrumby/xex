@@ -1,9 +1,24 @@
 package xex
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/coreos/capnslog"
 )
+
+func TestMain(m *testing.M) {
+	//TODO: Make this configurable
+	Repolog.SetRepoLogLevel(capnslog.TRACE)
+	// cfg, err := Repolog.ParseLogLevelConfig(logCfg)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// Repolog.SetLogLevel(cfg)
+
+	m.Run()
+}
 
 func TestLiteral(t *testing.T) {
 	l := NewLiteral("testing123")
@@ -45,8 +60,16 @@ type Car struct {
 	Driver *Driver
 }
 
+func (c Car) GetGearBox() Gearbox {
+	return c.Engine.Gearbox
+}
+
+func (c Car) String() string {
+	return fmt.Sprintf("Car driven by %s (%d) is in gear %d", c.Driver.Name, c.Driver.Age, c.Engine.Gearbox.Gear)
+}
+
 type Driver struct {
-	Name *string
+	Name string
 	Age  int
 }
 
@@ -60,10 +83,6 @@ type Gearbox struct {
 
 func (e *Engine) GetRPM(mph int) (rpm int) {
 	return mph * 150 / int(e.Gearbox.Gear)
-}
-
-func (c Car) GetGearBox() Gearbox {
-	return c.Engine.Gearbox
 }
 
 func TestMethodCall(t *testing.T) {
@@ -124,6 +143,7 @@ func TestFunctionCalls(t *testing.T) {
 				Gear: 4,
 			},
 		},
+		Driver: &Driver{Name: "Stig"},
 	}
 
 	eProp := NewProperty("Engine", nil)
@@ -212,7 +232,7 @@ func TestPropertiesWithPointers(t *testing.T) {
 	name := "Stig"
 	c := Car{
 		Driver: &Driver{
-			Name: &name,
+			Name: name,
 			Age:  999,
 		},
 	}
@@ -226,7 +246,7 @@ func TestPropertiesWithPointers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if *res.(*string) != "Stig" {
+	if res.(string) != "Stig" {
 		t.Fatalf("Expected Stig, got %s", res)
 	}
 }
@@ -235,7 +255,7 @@ func TestEnvAsPointer(t *testing.T) {
 	name := "Stig"
 	c := Car{
 		Driver: &Driver{
-			Name: &name,
+			Name: name,
 			Age:  999,
 		},
 	}
@@ -249,8 +269,7 @@ func TestEnvAsPointer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if *res.(*string) != "Stig" {
+	if res.(string) != "Stig" {
 		t.Fatalf("Expected Stig, got %s", res)
 	}
-
 }
