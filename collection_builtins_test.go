@@ -41,7 +41,6 @@ func TestSelectArray(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if r, ok := res.([]Object); ok {
 		if len(r) != 3 {
 			t.Errorf("Expected 3 results, got %d", len(r))
@@ -134,4 +133,48 @@ func TestSelectInvalidType(t *testing.T) {
 		t.Fatal(errors.New("Should have failed with invalid type for select"))
 	}
 
+}
+
+func TestCount(t *testing.T) {
+	fn, err := GetFunction("count")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	eq, err := GetFunction("equals")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	arr := [5]string{"a", "b", "c", "d", "e"}
+	res, err := fn.Exec(arr, NewExpression(NewLiteral(true)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res[0] != 5 {
+		t.Fatal("array count should be 5")
+	}
+
+	slc := []string{"f", "g", "h"}
+	res, err = fn.Exec(slc, NewExpression(NewFunctionCall(eq, []Node{NewProperty("", nil), NewLiteral("g")}, 0)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res[0] != 1 {
+		t.Fatalf("slice count should be 1 - got %d", res[0])
+	}
+
+	mp := map[string]int{"i": 0, "j": 1, "l": 2, "m": 3, "n": 3}
+	res, err = fn.Exec(mp, NewExpression(NewFunctionCall(eq, []Node{NewProperty("", nil), NewLiteral(3)}, 0)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res[0] != 2 {
+		t.Fatalf("map count should be 2 - got %d", res[0])
+	}
+
+	_, err = fn.Exec("not a countable type")
+	if err == nil {
+		t.Fatal("should have failed to count string")
+	}
 }

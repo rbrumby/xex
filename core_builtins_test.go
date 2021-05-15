@@ -36,45 +36,6 @@ func TestEquals(t *testing.T) {
 	}
 }
 
-func TestCount(t *testing.T) {
-	fn, err := GetFunction("count")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	arr := [5]string{"a", "b", "c", "d", "e"}
-	res, err := fn.Exec(arr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res[0] != 5 {
-		t.Fatal("array count should be 5")
-	}
-
-	slc := []string{"f", "g", "h"}
-	res, err = fn.Exec(slc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res[0] != 3 {
-		t.Fatal("slice count should be 3")
-	}
-
-	mp := map[string]int{"i": 0, "j": 1, "l": 2, "m": 3}
-	res, err = fn.Exec(mp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res[0] != 4 {
-		t.Fatal("map count should be 4")
-	}
-
-	_, err = fn.Exec("not a countable type")
-	if err == nil {
-		t.Fatal("should have failed to count string")
-	}
-}
-
 func TestSwitch(t *testing.T) {
 	fn, err := GetFunction("switch")
 	if err != nil {

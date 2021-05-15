@@ -1,9 +1,7 @@
 package xex
 
 import (
-	"fmt"
 	"math"
-	"reflect"
 )
 
 func registerCoreBuiltins() {
@@ -13,20 +11,6 @@ func registerCoreBuiltins() {
 			`compares 2 inputs returning a bool`,
 			func(val1, val2 interface{}) bool {
 				return val1 == val2
-			},
-		),
-	)
-
-	RegisterFunction(
-		NewFunction(
-			"count",
-			`returns the number of elements in the passed in slice / array or map`,
-			func(val1 interface{}) (int, error) {
-				switch reflect.TypeOf(val1).Kind() {
-				case reflect.Array, reflect.Slice, reflect.Map:
-					return reflect.ValueOf(val1).Len(), nil
-				}
-				return 0, fmt.Errorf("cannot count type %s", reflect.TypeOf(val1).String())
 			},
 		),
 	)
