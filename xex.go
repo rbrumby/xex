@@ -17,8 +17,10 @@ func init() {
 //Node is a node in the compiled expression tree.
 type Node interface {
 	Name() string
-	Evaluate(object interface{}) (interface{}, error)
+	Evaluate(values Values) (interface{}, error)
 }
+
+type Values map[string]interface{}
 
 type Expression struct {
 	root Node
@@ -32,8 +34,22 @@ func (e *Expression) Name() string {
 	return "<expression>"
 }
 
-func (e *Expression) Evaluate(object interface{}) (interface{}, error) {
-	return e.root.Evaluate(object)
+func (e *Expression) Evaluate(values Values) (interface{}, error) {
+	if values == nil {
+		values = make(Values)
+	}
+	return e.root.Evaluate(values)
+}
+
+//ValuesNode is a Node which returns the Values object being processed.
+type ValuesNode struct{}
+
+func (n ValuesNode) Name() string {
+	return "<ValuesNode>"
+}
+
+func (n ValuesNode) Evaluate(values Values) (interface{}, error) {
+	return values, nil
 }
 
 //FunctionCall is a Node in the compiled expression tree which represents a call to a funtion with Nodes as its arguments.
@@ -55,16 +71,17 @@ func (fc *FunctionCall) Index() int {
 	return fc.index
 }
 
-func (fc FunctionCall) Evaluate(object interface{}) (interface{}, error) {
+func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 	args := make([]interface{}, len(fc.arguments))
 	for i, argNode := range fc.arguments {
-		if reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
+		if reflect.TypeOf(fc.function.impl).NumIn() > i &&
+			reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
 			reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
-			//The function expects an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
+			//Arg is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
 			args[i] = argNode
 			continue
 		}
-		arg, err := argNode.Evaluate(object)
+		arg, err := argNode.Evaluate(values)
 		if err != nil {
 			return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
 		}
@@ -90,7 +107,7 @@ func (l *Literal) Name() string {
 	return "<literal>"
 }
 
-func (l *Literal) Evaluate(env interface{}) (interface{}, error) {
+func (l *Literal) Evaluate(values Values) (interface{}, error) {
 	return l.value, nil
 }
 
@@ -116,25 +133,23 @@ func (mc *MethodCall) Index() int {
 
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
 //It will call Evaluate on the parent & the arguments passed to the MethodCall before invoking the underlying method.
-func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) {
+func (mc *MethodCall) Evaluate(values Values) (result interface{}, err error) {
+	if mc.parent == nil {
+		return nil, fmt.Errorf("cannot call method %q on nil parent", mc.Name())
+	}
 	args := make([]reflect.Value, len(mc.arguments))
 	for i, argNode := range mc.arguments {
-		arg, err := argNode.Evaluate(env)
+		arg, err := argNode.Evaluate(values)
 		if err != nil {
 			return nil, fmt.Errorf("method %q: %s", mc.Name(), err)
 		}
 		args[i] = reflect.ValueOf(arg)
 	}
 
-	//Assume no parent so set parent to top-level env
-	parent := env
-	if mc.parent != nil {
-		//A parent Node is configured on this methodCall (the method is not on the top level env object)
-		//Evaluate the parent Node & use its result in place of the top level env.
-		parent, err = mc.parent.Evaluate(env)
-		if err != nil {
-			return nil, fmt.Errorf("method %s: %s", mc.Name(), err)
-		}
+	//Evaluate the parent Node & execute the named method on the result.
+	parent, err := mc.parent.Evaluate(values)
+	if err != nil {
+		return nil, fmt.Errorf("method %s: %s", mc.Name(), err)
 	}
 	meth := reflect.ValueOf(parent).MethodByName(mc.Name())
 	if !meth.IsValid() {
@@ -151,7 +166,7 @@ func (mc *MethodCall) Evaluate(env interface{}) (result interface{}, err error) 
 			if mc.parent == nil {
 				err = fmt.Errorf("top level object does not have method %q", mc.Name())
 			} else {
-				err = fmt.Errorf("value retrieved from %s does not have method %q", mc.parent.Name(), mc.Name())
+				err = fmt.Errorf("value retrieved from %q does not have method %q", mc.parent.Name(), mc.Name())
 			}
 			return
 		}
@@ -181,16 +196,19 @@ func (p *Property) Name() string {
 
 //Evaluate will evaluate the chain of parent nodes if parent is not null.
 //If parent is null it will evaluate the property from the env object.
-func (p *Property) Evaluate(env interface{}) (result interface{}, err error) {
+func (p *Property) Evaluate(values Values) (interface{}, error) {
 	if p.parent == nil {
-		//No parent, this is a top-level property reference - use env
-		return p.evaluate(env)
+		//If there is no parent, we must be referring to a map key in values
+		if values[p.Name()] == nil {
+			return nil, fmt.Errorf("unable to get property - no value named %q exists in Values passed to expression", p.Name())
+		}
+		return values[p.Name()], nil
 	}
-	res, err := p.parent.Evaluate(env)
+	prnt, err := p.parent.Evaluate(values)
 	if err != nil {
 		return nil, fmt.Errorf("error evaluating parent of %q: %s", p.Name(), err)
 	}
-	return p.evaluate(res)
+	return p.evaluate(prnt)
 }
 
 //evaluate does the real evaluation dereferencing pointers along the way.

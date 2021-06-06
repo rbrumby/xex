@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	"github.com/coreos/capnslog"
 )
 
 func TestMain(m *testing.M) {
 	//TODO: Make this configurable
-	Repolog.SetRepoLogLevel(capnslog.TRACE)
-	// cfg, err := Repolog.ParseLogLevelConfig(logCfg)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// Repolog.SetLogLevel(cfg)
+	//Repolog.SetRepoLogLevel(capnslog.TRACE)
+	cfg, err := Repolog.ParseLogLevelConfig("xex=ERROR")
+	if err != nil {
+		panic(err)
+	}
+	Repolog.SetLogLevel(cfg)
 
 	m.Run()
 }
@@ -23,7 +21,7 @@ func TestMain(m *testing.M) {
 func TestLiteral(t *testing.T) {
 	l := NewLiteral("testing123")
 	e := NewExpression(l)
-	if e, err := e.Evaluate(struct{}{}); err != nil {
+	if e, err := e.Evaluate(nil); err != nil {
 		t.Fatal(err)
 	} else if e != "testing123" {
 		t.Fatalf("literal Eval() returned %v", e)
@@ -42,11 +40,12 @@ func TestProperty(t *testing.T) {
 		},
 	}
 
-	p := NewProperty("Sub", nil)
-
+	root := NewProperty("root", nil)
+	p := NewProperty("Sub", root)
 	ps := NewProperty("Str2", p)
 	e := NewExpression(ps)
-	result, err := e.Evaluate(x)
+
+	result, err := e.Evaluate(Values{"root": x})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,15 +93,13 @@ func TestMethodCall(t *testing.T) {
 		},
 	}
 
-	eProp := NewProperty("Engine", nil)
-
+	root := NewProperty("car", nil)
+	eProp := NewProperty("Engine", root)
 	mphArg := NewLiteral(30)
-
 	rpm := NewMethodCall("GetRPM", eProp, []Node{mphArg}, 0)
-
 	exp := NewExpression(rpm)
 
-	res, err := exp.Evaluate(c)
+	res, err := exp.Evaluate(Values{"car": c})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,14 +120,14 @@ func TestNonExistentMethodCall(t *testing.T) {
 		},
 	}
 	mc := NewMethodCall("not_exists", nil, nil, 0)
-	_, err := mc.Evaluate(c)
+	_, err := mc.Evaluate(Values{"car": c})
 	if err == nil {
 		t.Fatal("expected method not_exists doesn't exist error")
 	}
 
 	e := NewProperty("Engine", nil)
 	mc2 := NewMethodCall("not_exists", e, nil, 0)
-	_, err = mc2.Evaluate(c)
+	_, err = mc2.Evaluate(Values{"car": c})
 	if err == nil {
 		t.Fatal("expected method not_exists doesn't exist error")
 	}
@@ -146,10 +143,9 @@ func TestFunctionCalls(t *testing.T) {
 		Driver: &Driver{Name: "Stig"},
 	}
 
-	eProp := NewProperty("Engine", nil)
-
+	root := NewProperty("car", nil)
+	eProp := NewProperty("Engine", root)
 	gbProp := NewProperty("Gearbox", eProp)
-
 	gProp := NewProperty("Gear", gbProp)
 
 	fnMultiply, err := GetFunction("multiply")
@@ -188,7 +184,7 @@ func TestFunctionCalls(t *testing.T) {
 		0,
 	)
 
-	result, err := fnDivideCall.Evaluate(c)
+	result, err := fnDivideCall.Evaluate(Values{"car": c})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -212,13 +208,13 @@ func TestPropertyOfMethodCall(t *testing.T) {
 		"Gear",
 		NewMethodCall(
 			"GetGearBox",
-			nil, //no parent
-			nil, //no args
+			NewProperty("car", nil), //parent
+			nil,                     //no args
 			0,
 		),
 	)
 
-	gear, err := gearNode.Evaluate(c)
+	gear, err := gearNode.Evaluate(Values{"car": c})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,12 +233,12 @@ func TestPropertiesWithPointers(t *testing.T) {
 		},
 	}
 
-	d := NewProperty("Driver", nil)
+	d := NewProperty("Driver", NewProperty("car", nil))
 	n := NewProperty("Name", d)
 
 	ex := NewExpression(n)
 
-	res, err := ex.Evaluate(c)
+	res, err := ex.Evaluate(Values{"car": c})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,12 +256,12 @@ func TestEnvAsPointer(t *testing.T) {
 		},
 	}
 
-	d := NewProperty("Driver", nil)
+	d := NewProperty("Driver", NewProperty("car", nil))
 	n := NewProperty("Name", d)
 
 	ex := NewExpression(n)
 
-	res, err := ex.Evaluate(&c)
+	res, err := ex.Evaluate(Values{"car": &c})
 	if err != nil {
 		t.Fatal(err)
 	}

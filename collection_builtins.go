@@ -1,7 +1,6 @@
 package xex
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 )
@@ -9,61 +8,115 @@ import (
 func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
+			"slice",
+			`Makes a new slice containing the passed in values. The type of slice created is determined by the type passed in the first element of values.
+			slice can be used to create a list of values to test against - is myproperty x, y or z?: select(slice("x", "y", "z"), .myproperty) > 0`,
+			func(values ...interface{}) (out interface{}, err error) {
+				logger.Tracef("creating slice of type %s", reflect.TypeOf(values[0]))
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("error creating slice: %s", recv)
+					}
+				}()
+				slice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(values[0])), 0, 0)
+				for _, v := range values {
+					slice = reflect.Append(slice, reflect.ValueOf(v))
+				}
+				logger.Tracef("Created %s of %s: %v", slice.Kind(), slice.Type().Elem(), slice.Interface())
+				return slice.Interface(), nil
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
+			"map",
+			`Makes a new map containing the passed in mapEntry values.
+			The type of the map (key / value) created is determined by the types passed in the first element of values.`,
+			func(values ...MapEntry) (out interface{}, err error) {
+				logger.Tracef("creating map of type %s:%s", reflect.TypeOf(values[0].key), reflect.TypeOf(values[0].value))
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("error creating map: %s", recv)
+					}
+				}()
+				mtyp := reflect.MapOf(reflect.TypeOf(values[0].key), reflect.TypeOf(values[0].value))
+				mout := reflect.MakeMap(mtyp)
+				for _, e := range values {
+					mout.SetMapIndex(reflect.ValueOf(e.key), reflect.ValueOf(e.value))
+				}
+				logger.Tracef("Created %s of %s: %v", mout.Kind(), mout.Type().Elem(), mout.Interface())
+				return mout.Interface(), nil
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
 			"select",
-			`input must be an array, slice or map from which each element is evaluated against exp
-			(in the case of a map, the value is evaluated not the key).
-			exp must return a bool. If exp results in true for an element, that element is added to the returned 
-			slice or map containing the same type as the input. Note that if an array is passed as input, a slice is returned.
-			`,
-			func(input interface{}, exp *Expression) (interface{}, error) {
-				var res reflect.Value
-				switch reflect.TypeOf(input).Kind() {
-				case reflect.Array,
-					reflect.Slice:
-					logger.Tracef("select array/slice: input is %s of %s", reflect.TypeOf(input).Kind(), reflect.TypeOf(input).Elem().Name())
-					res = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(input).Elem()), 0, 0)
-					err := forEachSlice(
-						input,
-						func(elem interface{}) error {
-							eval, err := exp.Evaluate(elem)
-							if err != nil {
-								return fmt.Errorf("select: %s", err)
-							}
-							if e, ok := eval.(bool); ok && e {
-								res = reflect.Append(res, reflect.ValueOf(elem))
-							} else if !ok {
-								return fmt.Errorf("Expression passed to select must return bool not %s", reflect.TypeOf(eval).String())
-							}
-							return nil
-						},
-					)
-					if err != nil {
-						return nil, err
+			`Returns the elements in the passed in slice / array or map for which expression evaluates to true.
+			 If an array is passed in, it is returned as a slice.
+			 If coll refers to a map, expression is evaluated on the map value, not the key. 
+			 - values should akways be a Noop which will return the Values being evaluated
+			 - coll is a *Expression which evaluates to the collection (array, slice or map) being selected
+			 - elemKey is a string which will be used in the expression to refer to the elements of elem
+			 - expression is the expression to be evaluated on each node`,
+			func(values Values, coll *Expression, elemKey string, expression *Expression) (interface{}, error) {
+				elem, err := coll.Evaluate(values)
+				if err != nil {
+					return nil, fmt.Errorf("selection evaluation error: %s", err)
+				}
+
+				//We'll take a copy of values because we will add the recordKey entry for the current record (and don't want to overwrite)
+				//anything in the original Values graph.
+				valcp := make(Values)
+				for vk, vv := range values {
+					valcp[vk] = vv
+				}
+
+				//out is the output result slice
+				var out reflect.Value
+				switch reflect.TypeOf(elem).Kind() {
+				case reflect.Array, reflect.Slice:
+					logger.Tracef("selecting array/slice: input is %s of %s", reflect.TypeOf(elem).Kind(), reflect.TypeOf(elem).Elem().Name())
+					out = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(elem).Elem()), 0, 0)
+					for i := 0; i < reflect.ValueOf(elem).Len(); i++ {
+						//Add the current record from the array/slice to valcp & pass it down to the expression for evaluation
+						valcp[elemKey] = reflect.ValueOf(elem).Index(i).Interface()
+						eval, err := expression.Evaluate(valcp)
+						if err != nil {
+							return nil, fmt.Errorf("error selecting array/slice: %s", err)
+						}
+						if e, ok := eval.(bool); ok && e {
+							//expression evaluated to true, add the current record to our output slice
+							out = reflect.Append(out, reflect.ValueOf(valcp[elemKey]))
+						} else if !ok {
+							return nil, fmt.Errorf("selector expression must return bool (true/false) not %q", reflect.TypeOf(eval).String())
+						}
 					}
 				case reflect.Map:
-					logger.Tracef("select map: input is %s of %s", reflect.TypeOf(input).Kind(), reflect.TypeOf(input).Elem().Name())
-					res = reflect.MakeMap(reflect.MapOf(reflect.TypeOf(input).Key(), reflect.TypeOf(input).Elem()))
-					err := forEachMap(
-						input,
-						func(key, val interface{}) error {
-							eval, err := exp.Evaluate(val)
-							if err != nil {
-								return fmt.Errorf("select: %s", err)
-							}
-							if e, ok := eval.(bool); ok && e {
-								res.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(val))
-							}
-							return nil
-						},
-					)
-					if err != nil {
-						return nil, err
+					logger.Tracef("select map: input is %s of %s", reflect.TypeOf(elem).Kind(), reflect.TypeOf(elem).Elem().Name())
+					out = reflect.MakeMap(reflect.MapOf(reflect.TypeOf(elem).Key(), reflect.TypeOf(elem).Elem()))
+					for _, k := range reflect.ValueOf(elem).MapKeys() {
+						//Add the current value from the map to valcp & pass it down to the expression for evaluation
+						valcp[elemKey] = reflect.ValueOf(elem).MapIndex(k).Interface()
+						eval, err := expression.Evaluate(valcp)
+						if err != nil {
+							return nil, fmt.Errorf("error selecting from map: %s", err)
+						}
+						if e, ok := eval.(bool); ok && e {
+							out.SetMapIndex(reflect.ValueOf(k.Interface()), reflect.ValueOf(valcp[elemKey]))
+						} else if !ok {
+							return nil, fmt.Errorf("selector expression must return bool (true/false) not %q", reflect.TypeOf(eval).String())
+						}
 					}
 				default:
-					return nil, errors.New("select: can only select an array, slice or map")
+					return 0, fmt.Errorf("cannot select from %q", reflect.TypeOf(elem).String())
 				}
-				logger.Tracef("select: response is a %s of %s", reflect.TypeOf(res.Interface()).Kind(), reflect.TypeOf(res.Interface()).Elem().Name())
-				return res.Interface(), nil
+				logger.Tracef("select: response is a %q of %q", reflect.TypeOf(out.Interface()).Kind(), reflect.TypeOf(out.Interface()).Elem().Name())
+				return out.Interface(), nil
 			},
 		),
 	)
@@ -71,79 +124,19 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"count",
-			`Returns the number of elements in the passed in slice / array or map which match the provided expression.
-			To count all elements pass an expression which always returns true.`,
-			func(in interface{}, exp *Expression) (int, error) {
-				var res int
+			`Returns the number of elements in the passed in slice / array or map.`,
+			func(in interface{}) (int, error) {
 				switch reflect.TypeOf(in).Kind() {
-				case reflect.Array, reflect.Slice:
-					forEachSlice(
-						in,
-						func(elem interface{}) error {
-							eval, err := exp.Evaluate(elem)
-							if err != nil {
-								return fmt.Errorf("count: %s", err)
-							}
-							if e, ok := eval.(bool); ok && e {
-								res++
-							}
-							return nil
-						},
-					)
-				case reflect.Map:
-					forEachMap(
-						in,
-						func(key, val interface{}) error {
-							eval, err := exp.Evaluate(val)
-							if err != nil {
-								return fmt.Errorf("count: %s", err)
-							}
-							if e, ok := eval.(bool); ok && e {
-								res++
-							}
-							return nil
-						},
-					)
-				default:
-					return 0, fmt.Errorf("cannot count type %s", reflect.TypeOf(in).String())
+				case reflect.Array, reflect.Slice, reflect.Map:
+					return reflect.ValueOf(in).Len(), nil
 				}
-				return res, nil
+				return 0, fmt.Errorf("cannot count type %s", reflect.TypeOf(in).String())
 			},
 		),
 	)
-
 }
 
-//forEachSlice is reused in collection functions so they don't have to worry about looping or repeating reflect calls.
-//inSlice can be a Slice or Array of any type.
-func forEachSlice(inSlice interface{}, call func(elem interface{}) error) error {
-	switch reflect.TypeOf(inSlice).Kind() {
-	case reflect.Slice,
-		reflect.Array:
-		for i := 0; i < reflect.ValueOf(inSlice).Len(); i++ {
-			if err := call(reflect.ValueOf(inSlice).Index(i).Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return fmt.Errorf("forEachSlice received %s not array or slice", reflect.TypeOf(inSlice).Kind())
-	}
-	return nil
-}
-
-//forEachMap is reused in collection functions so they don't have to worry about looping or repeating reflect calls.
-//inMap can be a map of nay key / value types.
-func forEachMap(inMap interface{}, call func(key, val interface{}) error) error {
-	switch reflect.TypeOf(inMap).Kind() {
-	case reflect.Map:
-		for _, k := range reflect.ValueOf(inMap).MapKeys() {
-			v := reflect.ValueOf(inMap).MapIndex(k)
-			if err := call(k.Interface(), v.Interface()); err != nil {
-				return err
-			}
-		}
-	default:
-		return fmt.Errorf("forEachMap received %s not map", reflect.TypeOf(inMap).Kind())
-	}
-	return nil
+type MapEntry struct {
+	key   interface{}
+	value interface{}
 }

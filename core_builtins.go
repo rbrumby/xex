@@ -5,6 +5,7 @@ import (
 )
 
 func registerCoreBuiltins() {
+
 	RegisterFunction(
 		NewFunction(
 			"equals",
@@ -20,7 +21,7 @@ func registerCoreBuiltins() {
 			"switch",
 			`Switches on the first value.
 			The following values are equivalent to "case : result" pairs.
-			If a final value is provided (an even number of arguments is passed), the final value is used as the default.
+			If a final value is provided (an even number of arguments is passed in total), the final value is used as the default.
 			If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned. And so on.
 			If there is no default and no values matched, switch returns nil.`,
 			func(values ...interface{}) interface{} {
@@ -49,5 +50,7 @@ func registerCoreBuiltins() {
 			},
 		),
 	)
+
+	//TODO: Greater, less than, etc
 
 }
