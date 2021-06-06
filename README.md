@@ -1,2 +1,2 @@
 # xex
-eXtensible EXpression library
+e**X**tensible **EX**pression library
