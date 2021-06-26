@@ -51,6 +51,16 @@ func registerCoreBuiltins() {
 		),
 	)
 
+	RegisterFunction(
+		NewFunction(
+			"nil",
+			`Returns what is passed - used to implement parenthesis grouping`,
+			func(value interface{}) interface{} {
+				return value
+			},
+		),
+	)
+
 	//TODO: Greater, less than, etc
 
 }
