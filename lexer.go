@@ -58,7 +58,17 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s: (%d, %d), %q", t.Typ.String(), t.Start, len(t.Value), t.Value)
+	return fmt.Sprintf("%s (%d, %d) = %q", t.Typ.String(), t.Start, len(t.Value), t.Value)
+}
+
+func (t Token) Error() string {
+	switch t.Typ {
+	case TOKEN_NOT_DETERMINED:
+		return fmt.Sprintf("ambiguous token: %s", t.String())
+	case TOKEN_NOT_RECOGNIZED:
+		return fmt.Sprintf("unrecognized token: %s", t.String())
+	}
+	return ""
 }
 
 type Lexer struct {
@@ -85,12 +95,12 @@ func (l Lexer) Lex() (tokens []Token, err error) {
 			switch tType {
 
 			case TOKEN_NOT_RECOGNIZED:
-				//We have run out of token. Back up and add this token to the output slice.
+				//We have run out of token. Back up, add this token to the output slice & start a new token.
 				if err = br.UnreadRune(); err != nil {
 					return nil, err
 				}
 				if l.currentToken.Typ == TOKEN_NOT_DETERMINED {
-					return nil, fmt.Errorf("unrecognized token %q", string(runes))
+					return nil, l.currentToken
 				}
 				tokens = append(tokens, l.currentToken)
 				runes = runes[:0]
