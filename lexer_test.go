@@ -1,65 +1,67 @@
 package xex
 
 import (
-	"fmt"
+	"bufio"
 	"strings"
 	"testing"
 )
 
-func TestLexer(t *testing.T) {
-	// Repolog.SetRepoLogLevel(capnslog.TRACE)
-	l := Lexer{
-		Reader: strings.NewReader(`test.thing + something("Hello, \"world\".",
-		reference) + 50 - 1.23`),
+func TestIdentAndInt(t *testing.T) {
+	//                                                         1         2         3         4         5         6
+	//                                               0123456789012345678901234567890123456789012345678901234567890123456789
+	l := NewLexer(bufio.NewReader(strings.NewReader(`123 4.5 hello_WORLD.FuncName  + - * / % ^ == < != "a string" "" ()[].,`)))
+	expected := []*Token{
+		{TOKEN_INT, 0, "123"},
+		{TOKEN_WHITESPACE, 3, " "},
+		{TOKEN_FLOAT, 4, "4.5"},
+		{TOKEN_WHITESPACE, 7, " "},
+		{TOKEN_IDENT, 8, "hello_WORLD"},
+		{TOKEN_SEPARATOR, 19, "."},
+		{TOKEN_IDENT, 20, "FuncName"},
+		{TOKEN_WHITESPACE, 28, "  "},
+		{TOKEN_OPERATOR, 30, "+"},
+		{TOKEN_WHITESPACE, 31, " "},
+		{TOKEN_OPERATOR, 32, "-"},
+		{TOKEN_WHITESPACE, 33, " "},
+		{TOKEN_OPERATOR, 34, "*"},
+		{TOKEN_WHITESPACE, 35, " "},
+		{TOKEN_OPERATOR, 36, "/"},
+		{TOKEN_WHITESPACE, 37, " "},
+		{TOKEN_OPERATOR, 38, "%"},
+		{TOKEN_WHITESPACE, 39, " "},
+		{TOKEN_OPERATOR, 40, "^"},
+		{TOKEN_WHITESPACE, 41, " "},
+		{TOKEN_COMPARATOR, 42, "=="},
+		{TOKEN_WHITESPACE, 44, " "},
+		{TOKEN_COMPARATOR, 45, "<"},
+		{TOKEN_WHITESPACE, 46, " "},
+		{TOKEN_COMPARATOR, 47, "!="},
+		{TOKEN_WHITESPACE, 49, " "},
+		{TOKEN_STRING, 50, "\"a string\""},
+		{TOKEN_WHITESPACE, 60, " "},
+		{TOKEN_STRING, 61, "\"\""},
+		{TOKEN_WHITESPACE, 63, " "},
+		{TOKEN_LPAREN, 64, "("},
+		{TOKEN_RPAREN, 65, ")"},
+		{TOKEN_LINDEX, 66, "["},
+		{TOKEN_RINDEX, 67, "]"},
+		{TOKEN_SEPARATOR, 68, "."},
+		{TOKEN_DELIMITER, 69, ","},
+		{TOKEN_EOF, 70, ""},
 	}
-
-	tokens, err := l.Lex()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expectedTokens := []Token{
-		{TOKEN_IDENT, 1, "test"},
-		{TOKEN_SEPARATOR, 5, "."},
-		{TOKEN_IDENT, 6, "thing"},
-		{TOKEN_WHITESPACE, 11, " "},
-		{TOKEN_OPERATOR, 12, "+"},
-		{TOKEN_WHITESPACE, 13, " "},
-		{TOKEN_IDENT, 14, "something"},
-		{TOKEN_LPAREN, 23, "("},
-		{TOKEN_STRING, 24, "\"Hello, \\\"world\\\".\""},
-		{TOKEN_COMMA, 43, ","},
-		{TOKEN_WHITESPACE, 44, "\n		"},
-		{TOKEN_IDENT, 47, "reference"},
-		{TOKEN_RPAREN, 56, ")"},
-		{TOKEN_WHITESPACE, 57, " "},
-		{TOKEN_OPERATOR, 58, "+"},
-		{TOKEN_WHITESPACE, 59, " "},
-		{TOKEN_INT, 60, "50"},
-		{TOKEN_WHITESPACE, 62, " "},
-		{TOKEN_OPERATOR, 63, "-"},
-		{TOKEN_WHITESPACE, 64, " "},
-		{TOKEN_FLOAT, 65, "1.23"},
-	}
-	fmt.Println(tokens)
-	if len(tokens) != len(expectedTokens) {
-		t.Fatalf("got %d tokens, expect %d", len(tokens), len(expectedTokens))
-	}
-
-	for i := range tokens {
-		if tokens[i] != expectedTokens[i] {
-			t.Fatalf("token %d was %s, expected %s", i, tokens[i], expectedTokens[i])
+	go l.Run()
+	c := -1
+	for tok := range l.out {
+		c++
+		if *tok != *expected[c] {
+			t.Fatalf("Expected %s. Got %s", expected[c], tok)
+		}
+		if tok.Typ == TOKEN_EOF {
+			break
 		}
 	}
 }
 
-func TestLexerBadExpr(t *testing.T) {
-	// Repolog.SetRepoLogLevel(capnslog.TRACE)
-	l := Lexer{
-		Reader: strings.NewReader(`This should fail because $ "isn't" valid`),
-	}
-	_, err := l.Lex()
-	if err == nil {
-		t.Fatal("Should have failed with unrecognized token")
-	}
-}
+// func validate(expected, got *Token) bool {
+// 	return .Typ == tt && t.Value == value
+// }

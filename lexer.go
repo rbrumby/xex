@@ -1,23 +1,22 @@
 package xex
 
+//Lexer is based on Rob Pikes talk (https://www.youtube.com/watch?v=HxaD_trXwRE) about the std lib text template implementation.
 import (
 	"bufio"
 	"fmt"
 	"io"
-	"regexp"
+	"strings"
+	"unicode"
 )
-
-var DefaultGrammar = StandardGrammar{}
 
 type TokenType int
 
 const (
-	TOKEN_NOT_RECOGNIZED TokenType = iota
-	TOKEN_NOT_DETERMINED
+	TOKEN_ERROR TokenType = iota
 	TOKEN_WHITESPACE
 	TOKEN_IDENT
 	TOKEN_SEPARATOR
-	TOKEN_COMMA
+	TOKEN_DELIMITER
 	TOKEN_LPAREN
 	TOKEN_RPAREN
 	TOKEN_LINDEX
@@ -27,29 +26,32 @@ const (
 	TOKEN_STRING
 	TOKEN_INT
 	TOKEN_FLOAT
+	TOKEN_EOF
 )
 
 var tokenTypes = []string{
-	TOKEN_NOT_RECOGNIZED: "NOT_RECOGNIZED",
-	TOKEN_NOT_DETERMINED: "UNDETERMINED",
-	TOKEN_WHITESPACE:     "WHITESPACE",
-	TOKEN_IDENT:          "IDENT",
-	TOKEN_SEPARATOR:      "SEPARATOR",
-	TOKEN_COMMA:          "COMMA",
-	TOKEN_LPAREN:         "LEFT_PARENTHESIS",
-	TOKEN_RPAREN:         "RIGHT_PARENTHESIS",
-	TOKEN_LINDEX:         "LEFT_INDEX",
-	TOKEN_RINDEX:         "RIGHT_INDEX",
-	TOKEN_OPERATOR:       "OPERATOR",
-	TOKEN_COMPARATOR:     "COMPARATOR",
-	TOKEN_STRING:         "STRING",
-	TOKEN_INT:            "INTEGER",
-	TOKEN_FLOAT:          "FLOAT",
+	TOKEN_ERROR:      "ERROR",
+	TOKEN_WHITESPACE: "WHITESPACE",
+	TOKEN_IDENT:      "IDENT",
+	TOKEN_SEPARATOR:  "SEPARATOR",
+	TOKEN_DELIMITER:  "COMMA",
+	TOKEN_LPAREN:     "LEFT_PARENTHESIS",
+	TOKEN_RPAREN:     "RIGHT_PARENTHESIS",
+	TOKEN_LINDEX:     "LEFT_INDEX",
+	TOKEN_RINDEX:     "RIGHT_INDEX",
+	TOKEN_OPERATOR:   "OPERATOR",
+	TOKEN_COMPARATOR: "COMPARATOR",
+	TOKEN_STRING:     "STRING",
+	TOKEN_INT:        "INTEGER",
+	TOKEN_FLOAT:      "FLOAT",
+	TOKEN_EOF:        "EOF",
 }
 
 func (tt TokenType) String() string {
 	return tokenTypes[tt]
 }
+
+type stateFn func(l *Lexer) stateFn
 
 type Token struct {
 	Typ   TokenType
@@ -57,123 +59,199 @@ type Token struct {
 	Value string
 }
 
-func (t Token) String() string {
+func (t *Token) String() string {
 	return fmt.Sprintf("%s (%d, %d) = %q", t.Typ.String(), t.Start, len(t.Value), t.Value)
 }
 
-func (t Token) Error() string {
-	switch t.Typ {
-	case TOKEN_NOT_DETERMINED:
-		return fmt.Sprintf("ambiguous token: %s", t.String())
-	case TOKEN_NOT_RECOGNIZED:
-		return fmt.Sprintf("unrecognized token: %s", t.String())
-	}
-	return ""
-}
-
 type Lexer struct {
-	Reader       io.Reader
-	currentToken Token
+	Reader *bufio.Reader
+	buff   []rune
+	err    error
+	out    chan *Token
+	pos    int
+	start  int
+	eof    bool
 }
 
-func (l Lexer) Lex() (tokens []Token, err error) {
-	br := bufio.NewReader(l.Reader)
-	tokens = make([]Token, 0)
-	runes := make([]rune, 0)
+//NewLexer returns a *Lexer to read an expression from the provided reader
+func NewLexer(r *bufio.Reader) *Lexer {
+	return &Lexer{
+		Reader: r,
+		buff:   make([]rune, 0),
+		out:    make(chan *Token),
+	}
+}
 
-	l.currentToken.Typ = TOKEN_NOT_DETERMINED
-	l.currentToken.Start = 1
+func (l *Lexer) Error() string {
+	return l.err.Error()
+}
 
-	for {
-		if r, _, err := br.ReadRune(); err == nil {
-			logger.Println("Looping")
-			runes = append(runes, r)
-			tType := l.getType(runes)
+func (l *Lexer) next() rune {
+	r, _, err := l.Reader.ReadRune()
+	l.pos++
+	if err == io.EOF {
+		l.eof = true
+	} else if err != nil {
+		l.err = err
+		l.emit(TOKEN_ERROR)
+	}
+	return r
+}
 
-			logger.Tracef("%s is %s and current token is %s\n", string(runes), tType, l.currentToken)
-
-			switch tType {
-
-			case TOKEN_NOT_RECOGNIZED:
-				//We have run out of token. Back up, add this token to the output slice & start a new token.
-				if err = br.UnreadRune(); err != nil {
-					return nil, err
-				}
-				if l.currentToken.Typ == TOKEN_NOT_DETERMINED {
-					return nil, l.currentToken
-				}
-				tokens = append(tokens, l.currentToken)
-				runes = runes[:0]
-				logger.Tracef("got token %s\n", l.currentToken)
-				l.currentToken = Token{
-					Typ:   TOKEN_NOT_DETERMINED,
-					Start: l.currentToken.Start + len(string(l.currentToken.Value)),
-				}
-				logger.Tracef("reset current token to %s\n", l.currentToken)
-			default:
-				//Set token type & value
-				l.currentToken.Typ = tType
-				l.currentToken.Value = string(runes)
-			}
-		} else {
-			if err == io.EOF {
-				//Store the last token
-				tokens = append(tokens, l.currentToken)
-			}
-			break
+func (l *Lexer) backup() {
+	if !l.eof {
+		if err := l.Reader.UnreadRune(); err != nil {
+			l.err = err
+			l.emit(TOKEN_ERROR)
+			return
 		}
+		l.pos--
 	}
-	if err != nil && err != io.EOF {
-		return nil, err
-	}
-	return tokens, nil
-
 }
 
-func (l Lexer) getType(runes []rune) TokenType {
-	m := DefaultGrammar.Matches([]byte(string(runes)))
-	logger.Tracef("%q matched %v", string(runes), m)
-	switch len(m) {
-	case 0:
-		return TOKEN_NOT_RECOGNIZED
-	case 1:
-		return m[0]
+func (l *Lexer) peek() (r rune) {
+	r = l.next()
+	l.backup()
+	return
+}
+
+func (l *Lexer) consume(validFn func(r rune) bool) bool {
+	r := l.next()
+	if validFn(r) {
+		l.buff = append(l.buff, r)
+		return true
+	}
+	l.backup()
+	return false
+}
+
+func (l *Lexer) consumeUntilInvalid(validFn func(r rune) bool) {
+	for l.consume(validFn) {
+	}
+}
+
+//emit clears the current buffer &
+func (l *Lexer) emit(tType TokenType) {
+	val := string(l.buff)
+	if tType == TOKEN_ERROR {
+		val = fmt.Sprintf("error reading expression: %s", l.err.Error())
+	}
+	token := &Token{
+		Typ:   tType,
+		Start: l.start,
+		Value: val,
+	}
+	l.buff = l.buff[:0]
+	l.start = l.pos
+	l.out <- token
+}
+
+func (l *Lexer) Run() {
+	for fn := lexNextToken; fn != nil; {
+		fn = fn(l)
+	}
+}
+
+func lexNextToken(l *Lexer) stateFn {
+	r := l.peek()
+	switch {
+	case l.eof:
+		l.emit(TOKEN_EOF)
+	case unicode.IsSpace(r):
+		l.consumeUntilInvalid(unicode.IsSpace)
+		l.emit(TOKEN_WHITESPACE)
+		return lexNextToken
+	case unicode.IsLetter(r): //ident must start with a letter but can contain alphanumerics & underscores
+		l.consumeUntilInvalid(isIdentChar)
+		l.emit(TOKEN_IDENT)
+		return lexNextToken
+	case r == '.':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_SEPARATOR)
+		return lexNextToken
+	case r == ',':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_DELIMITER)
+		return lexNextToken
+	case r == '(':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_LPAREN)
+		return lexNextToken
+	case r == ')':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_RPAREN)
+		return lexNextToken
+	case r == '[':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_LINDEX)
+		return lexNextToken
+	case r == ']':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_RINDEX)
+		return lexNextToken
+	case isOperator(r): //operators are single runes so we can do a single consume
+		l.consume(isOperator)
+		l.emit(TOKEN_OPERATOR)
+		return lexNextToken
+	case isComparator(r): //operators can be 1 or 2 runes. We know the 1st consume will succeed. We don't care if the 2nd does or not!
+		l.consume(isComparator)
+		l.consume(isComparator)
+		l.emit(TOKEN_COMPARATOR)
+		return lexNextToken
+	case isQuote(r):
+		return lexStringLiteral
+	case unicode.IsDigit(r): //if it starts with a number its a number - but it might get delegated to lexFloat if it contains a "."
+		return lexNumber
 	default:
-		return TOKEN_NOT_DETERMINED
+		l.err = fmt.Errorf("unrecognized character %q at position %d", r, l.pos)
+		l.emit(TOKEN_ERROR)
 	}
+	return nil
 }
 
-type Grammar interface {
-	Matches([]byte) []TokenType
+func lexNumber(l *Lexer) stateFn {
+	for l.consume(unicode.IsDigit) {
+	}
+	if l.peek() == '.' {
+		//consume the '.' and treat as a float
+		l.consume(func(r rune) bool { return true })
+		return lexFloat
+	}
+	l.emit(TOKEN_INT)
+	return lexNextToken
 }
 
-type StandardGrammar struct{}
-
-func (sg StandardGrammar) Get() map[TokenType]*regexp.Regexp {
-	return map[TokenType]*regexp.Regexp{
-		TOKEN_WHITESPACE: regexp.MustCompile(`^[\n\r\t\s\x00]+$`),
-		TOKEN_IDENT:      regexp.MustCompile(`^[a-zA-Z_]+[a-zA-Z0-9_]*$`),
-		TOKEN_SEPARATOR:  regexp.MustCompile(`^\.$`),
-		TOKEN_COMMA:      regexp.MustCompile(`^\,$`),
-		TOKEN_LPAREN:     regexp.MustCompile(`^[(]$`),
-		TOKEN_RPAREN:     regexp.MustCompile(`^[)]$`),
-		TOKEN_LINDEX:     regexp.MustCompile(`^[[]]$`),
-		TOKEN_RINDEX:     regexp.MustCompile(`^[]]$`),
-		TOKEN_OPERATOR:   regexp.MustCompile(`^[\+\-\/\*]$`),
-		TOKEN_COMPARATOR: regexp.MustCompile(`^>|>=|<|<=|==$`),
-		TOKEN_STRING:     regexp.MustCompile(`^"((\\")|[^"])*$|^"((\\")|[^"])*"$`),
-		TOKEN_INT:        regexp.MustCompile(`^[0-9]+$`),
-		TOKEN_FLOAT:      regexp.MustCompile(`^[0-9]+\.([0-9]+)?$`),
+func lexFloat(l *Lexer) stateFn {
+	for l.consume(unicode.IsDigit) {
 	}
+	l.emit(TOKEN_FLOAT)
+	return lexNextToken
 }
 
-func (sg StandardGrammar) Matches(b []byte) []TokenType {
-	types := make([]TokenType, 0)
-	for tt, reg := range sg.Get() {
-		if reg.Match(b) {
-			logger.Tracef("grammar match: %q matches %q\n", string(b), tt)
-			types = append(types, tt)
-		}
-	}
-	return types
+func lexStringLiteral(l *Lexer) stateFn {
+	//Get quote starting character so we know what will close the string
+	start := l.peek()
+	//Consume the initial quote
+	l.consume(isQuote)
+	//Consume until we find the matching character
+	l.consumeUntilInvalid(func(r rune) bool { return r != start })
+	//Then consume the closing quote
+	l.consume(isQuote)
+	l.emit(TOKEN_STRING)
+	return lexNextToken
+}
+
+func isIdentChar(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r)
+}
+func isOperator(r rune) bool {
+	return strings.ContainsRune("+-/*%^", r)
+}
+
+func isComparator(r rune) bool {
+	return strings.ContainsRune("!=<>", r)
+}
+
+func isQuote(r rune) bool {
+	return strings.ContainsRune("\"`'", r)
 }
