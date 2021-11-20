@@ -9,7 +9,7 @@ import (
 func TestIdentAndInt(t *testing.T) {
 	//                                                         1         2         3         4         5         6
 	//                                               0123456789012345678901234567890123456789012345678901234567890123456789
-	l := NewLexer(bufio.NewReader(strings.NewReader(`123 4.5 hello_WORLD.FuncName  + - * / % ^ == < != "a string" "" ()[].,`)))
+	l := NewDefaultLexer(bufio.NewReader(strings.NewReader(`123 4.5 hello_WORLD.FuncName  + - * / % ^ == < != "a string" "" ()[]., false/true`)))
 	expected := []*Token{
 		{TOKEN_INT, 0, "123"},
 		{TOKEN_WHITESPACE, 3, " "},
@@ -19,17 +19,17 @@ func TestIdentAndInt(t *testing.T) {
 		{TOKEN_SEPARATOR, 19, "."},
 		{TOKEN_IDENT, 20, "FuncName"},
 		{TOKEN_WHITESPACE, 28, "  "},
-		{TOKEN_OPERATOR, 30, "+"},
+		{TOKEN_BINARY_OPERATOR, 30, "+"},
 		{TOKEN_WHITESPACE, 31, " "},
-		{TOKEN_OPERATOR, 32, "-"},
+		{TOKEN_BINARY_OPERATOR, 32, "-"},
 		{TOKEN_WHITESPACE, 33, " "},
-		{TOKEN_OPERATOR, 34, "*"},
+		{TOKEN_BINARY_OPERATOR, 34, "*"},
 		{TOKEN_WHITESPACE, 35, " "},
-		{TOKEN_OPERATOR, 36, "/"},
+		{TOKEN_BINARY_OPERATOR, 36, "/"},
 		{TOKEN_WHITESPACE, 37, " "},
-		{TOKEN_OPERATOR, 38, "%"},
+		{TOKEN_BINARY_OPERATOR, 38, "%"},
 		{TOKEN_WHITESPACE, 39, " "},
-		{TOKEN_OPERATOR, 40, "^"},
+		{TOKEN_BINARY_OPERATOR, 40, "^"},
 		{TOKEN_WHITESPACE, 41, " "},
 		{TOKEN_COMPARATOR, 42, "=="},
 		{TOKEN_WHITESPACE, 44, " "},
@@ -47,21 +47,20 @@ func TestIdentAndInt(t *testing.T) {
 		{TOKEN_RINDEX, 67, "]"},
 		{TOKEN_SEPARATOR, 68, "."},
 		{TOKEN_DELIMITER, 69, ","},
-		{TOKEN_EOF, 70, ""},
+		{TOKEN_WHITESPACE, 70, " "},
+		{TOKEN_BOOL, 71, "false"},
+		{TOKEN_BINARY_OPERATOR, 76, "/"},
+		{TOKEN_BOOL, 77, "true"},
+		{TOKEN_EOF, 82, ""},
 	}
-	go l.Run()
-	c := -1
-	for tok := range l.out {
-		c++
-		if *tok != *expected[c] {
-			t.Fatalf("Expected %s. Got %s", expected[c], tok)
+	l.Run()
+	for _, exp := range expected {
+		tok := l.NextToken()
+		if *exp != *tok {
+			t.Fatalf("Expected %s. Got %s", exp, tok)
 		}
-		if tok.Typ == TOKEN_EOF {
+		if exp.Typ == TOKEN_EOF {
 			break
 		}
 	}
 }
-
-// func validate(expected, got *Token) bool {
-// 	return .Typ == tt && t.Value == value
-// }

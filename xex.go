@@ -18,6 +18,12 @@ func init() {
 type Node interface {
 	Name() string
 	Evaluate(values Values) (interface{}, error)
+	String() string
+}
+
+type Call interface {
+	Node
+	Arg(arg Node)
 }
 
 type Values map[string]interface{}
@@ -41,6 +47,10 @@ func (e *Expression) Evaluate(values Values) (interface{}, error) {
 	return e.root.Evaluate(values)
 }
 
+func (e *Expression) String() string {
+	return fmt.Sprintf("Expression:\n%s\n", e.root)
+}
+
 //ValuesNode is a Node which returns the Values object being processed.
 type ValuesNode struct{}
 
@@ -50,6 +60,10 @@ func (n ValuesNode) Name() string {
 
 func (n ValuesNode) Evaluate(values Values) (interface{}, error) {
 	return values, nil
+}
+
+func (n ValuesNode) String() string {
+	return n.Name()
 }
 
 //FunctionCall is a Node in the compiled expression tree which represents a call to a funtion with Nodes as its arguments.
@@ -69,6 +83,13 @@ func (fc *FunctionCall) Name() string {
 
 func (fc *FunctionCall) Index() int {
 	return fc.index
+}
+
+func (fc *FunctionCall) Arg(arg Node) {
+	if fc.arguments == nil {
+		fc.arguments = make([]Node, 0)
+	}
+	fc.arguments = append(fc.arguments, arg)
 }
 
 func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
@@ -94,6 +115,10 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 	return results[fc.Index()], nil
 }
 
+func (f *FunctionCall) String() string {
+	return fmt.Sprintf("FunctionCall:\n%s(%v)\n", f.function.name, f.arguments)
+}
+
 //Literal is a Node in the compiled expression tree which represents a literal value.
 type Literal struct {
 	value interface{}
@@ -109,6 +134,10 @@ func (l *Literal) Name() string {
 
 func (l *Literal) Evaluate(values Values) (interface{}, error) {
 	return l.value, nil
+}
+
+func (l *Literal) String() string {
+	return fmt.Sprintf("Literal:\n%s\n", l.value)
 }
 
 //MethodCall is a Node in the compiled expression tree which represents a call to a method on a parent object.
@@ -129,6 +158,17 @@ func (mc *MethodCall) Name() string {
 
 func (mc *MethodCall) Index() int {
 	return mc.index
+}
+
+func (mc *MethodCall) Arg(arg Node) {
+	if mc.arguments == nil {
+		mc.arguments = make([]Node, 0)
+	}
+	mc.arguments = append(mc.arguments, arg)
+}
+
+func (m *MethodCall) String() string {
+	return fmt.Sprintf("MethodCall:\n%s(%v)\n", m.name, m.arguments)
 }
 
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
@@ -230,4 +270,8 @@ func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
 	result = propVal.Interface()
 	return
 
+}
+
+func (p *Property) String() string {
+	return fmt.Sprintf("Property:%s\n", p.name)
 }

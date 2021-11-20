@@ -279,7 +279,7 @@ func TestFilterMapCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res != 3 {
+	if res != 2 {
 		t.Fatalf("map count should be 2 - got %d", res)
 	}
 }

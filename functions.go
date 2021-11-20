@@ -57,8 +57,7 @@ func (f *Function) validate(fNameRegex string) (err error) {
 		if err != nil {
 			panic(fmt.Errorf("error applying regexp %q to %q: %s", fNameRegex, f.name, err))
 		}
-		panic(fmt.Errorf("invalid function name %q: function names may contain only lower-case letters, numbers & underscores"+
-			" & must begin with a letter (must match regular expression %q)", f.name, fNameRegex))
+		panic(fmt.Errorf("invalid function name %q: function names must match regular expression %q", f.name, fNameRegex))
 	}
 	if f.impl == nil || reflect.TypeOf(f.impl).Kind() != reflect.Func {
 		err = fmt.Errorf("implementation of %q is not a Go function", f.Name())

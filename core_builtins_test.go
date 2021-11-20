@@ -25,13 +25,24 @@ func TestEquals(t *testing.T) {
 		t.Fatal("values shouldn't match")
 	}
 
+	//Using a FunctionCall
 	t1 := testStruct{sub: testSubStruct{value: "AbC"}}
 	t2 := testStruct{sub: testSubStruct{value: "AbC"}}
-	res, err = fn.Exec(t1, t2)
+	fnc := NewFunctionCall(
+		fn,
+		[]Node{
+			NewProperty("tOne", nil),
+			NewProperty("tTwo", nil),
+		},
+		0,
+	)
+	res2, err := fnc.Evaluate(Values{"tOne": t1, "tTwo": t2})
+
+	// res, err = fn.Exec(t1, t2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res[0] != true {
+	if res2 != true {
 		t.Fatal("values should match")
 	}
 }

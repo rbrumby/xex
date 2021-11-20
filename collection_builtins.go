@@ -59,7 +59,7 @@ func registerCollectionBuiltins() {
 			`Returns the elements in the passed in slice / array or map for which expression evaluates to true.
 			 If an array is passed in, it is returned as a slice.
 			 If coll refers to a map, expression is evaluated on the map value, not the key. 
-			 - values should akways be a Noop which will return the Values being evaluated
+			 - values should always be a Noop which will return the Values being evaluated
 			 - coll is a *Expression which evaluates to the collection (array, slice or map) being selected
 			 - elemKey is a string which will be used in the expression to refer to the elements of elem
 			 - expression is the expression to be evaluated on each node`,

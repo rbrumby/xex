@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/coreos/capnslog"
 )
+
+func init() {
+	// Repolog = capnslog.MustRepoLogger("github.com/rbrumby/xex")
+	// Repolog.SetRepoLogLevel(capnslog.TRACE)
+	capnslog.SetGlobalLogLevel(capnslog.TRACE)
+}
 
 func TestMain(m *testing.M) {
 	//TODO: Make this configurable
 	//Repolog.SetRepoLogLevel(capnslog.TRACE)
-	cfg, err := Repolog.ParseLogLevelConfig("xex=ERROR")
+	cfg, err := Repolog.ParseLogLevelConfig("xex=DEBUG")
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +85,12 @@ type Engine struct {
 }
 
 type Gearbox struct {
-	Gear uint8
+	Gear  uint8
+	Gears []Gear
+}
+
+type Gear struct {
+	Ratio float32
 }
 
 func (e *Engine) GetRPM(mph int) (rpm int) {
@@ -122,10 +135,10 @@ func TestNonExistentMethodCall(t *testing.T) {
 	mc := NewMethodCall("not_exists", nil, nil, 0)
 	_, err := mc.Evaluate(Values{"car": c})
 	if err == nil {
-		t.Fatal("expected method not_exists doesn't exist error")
+		t.Fatal("expected cannot call method on inl object")
 	}
 
-	e := NewProperty("Engine", nil)
+	e := NewProperty("Engine", NewProperty("car", nil))
 	mc2 := NewMethodCall("not_exists", e, nil, 0)
 	_, err = mc2.Evaluate(Values{"car": c})
 	if err == nil {

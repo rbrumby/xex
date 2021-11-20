@@ -21,37 +21,43 @@ const (
 	TOKEN_RPAREN
 	TOKEN_LINDEX
 	TOKEN_RINDEX
-	TOKEN_OPERATOR
+	TOKEN_BINARY_OPERATOR
+	TOKEN_UNARY_OPERATOR
 	TOKEN_COMPARATOR
 	TOKEN_STRING
 	TOKEN_INT
 	TOKEN_FLOAT
+	TOKEN_BOOL
+	TOKEN_ALL_VALUES
 	TOKEN_EOF
 )
 
 var tokenTypes = []string{
-	TOKEN_ERROR:      "ERROR",
-	TOKEN_WHITESPACE: "WHITESPACE",
-	TOKEN_IDENT:      "IDENT",
-	TOKEN_SEPARATOR:  "SEPARATOR",
-	TOKEN_DELIMITER:  "COMMA",
-	TOKEN_LPAREN:     "LEFT_PARENTHESIS",
-	TOKEN_RPAREN:     "RIGHT_PARENTHESIS",
-	TOKEN_LINDEX:     "LEFT_INDEX",
-	TOKEN_RINDEX:     "RIGHT_INDEX",
-	TOKEN_OPERATOR:   "OPERATOR",
-	TOKEN_COMPARATOR: "COMPARATOR",
-	TOKEN_STRING:     "STRING",
-	TOKEN_INT:        "INTEGER",
-	TOKEN_FLOAT:      "FLOAT",
-	TOKEN_EOF:        "EOF",
+	TOKEN_ERROR:           "ERROR",
+	TOKEN_WHITESPACE:      "WHITESPACE",
+	TOKEN_IDENT:           "IDENTIFIER",
+	TOKEN_SEPARATOR:       "SEPARATOR",
+	TOKEN_DELIMITER:       "DELIMITER",
+	TOKEN_LPAREN:          "LEFT_PARENTHESIS",
+	TOKEN_RPAREN:          "RIGHT_PARENTHESIS",
+	TOKEN_LINDEX:          "LEFT_INDEX",
+	TOKEN_RINDEX:          "RIGHT_INDEX",
+	TOKEN_BINARY_OPERATOR: "BINARY_OPERATOR",
+	TOKEN_UNARY_OPERATOR:  "UNARY_OPERATOR",
+	TOKEN_COMPARATOR:      "COMPARATOR",
+	TOKEN_STRING:          "STRING",
+	TOKEN_INT:             "INTEGER",
+	TOKEN_FLOAT:           "FLOAT",
+	TOKEN_BOOL:            "BOOL",
+	TOKEN_ALL_VALUES:      "ALL_VALUES",
+	TOKEN_EOF:             "EOF",
 }
 
 func (tt TokenType) String() string {
 	return tokenTypes[tt]
 }
 
-type stateFn func(l *Lexer) stateFn
+type stateFn func(l *DefaultLexer) stateFn
 
 type Token struct {
 	Typ   TokenType
@@ -63,30 +69,36 @@ func (t *Token) String() string {
 	return fmt.Sprintf("%s (%d, %d) = %q", t.Typ.String(), t.Start, len(t.Value), t.Value)
 }
 
-type Lexer struct {
+type Lexer interface {
+	Run()
+	NextToken() *Token
+	Error() string
+}
+
+type DefaultLexer struct {
 	Reader *bufio.Reader
 	buff   []rune
 	err    error
-	out    chan *Token
+	tokens chan *Token
 	pos    int
 	start  int
 	eof    bool
 }
 
 //NewLexer returns a *Lexer to read an expression from the provided reader
-func NewLexer(r *bufio.Reader) *Lexer {
-	return &Lexer{
+func NewDefaultLexer(r *bufio.Reader) *DefaultLexer {
+	return &DefaultLexer{
 		Reader: r,
 		buff:   make([]rune, 0),
-		out:    make(chan *Token),
+		tokens: make(chan *Token),
 	}
 }
 
-func (l *Lexer) Error() string {
+func (l *DefaultLexer) Error() string {
 	return l.err.Error()
 }
 
-func (l *Lexer) next() rune {
+func (l *DefaultLexer) next() rune {
 	r, _, err := l.Reader.ReadRune()
 	l.pos++
 	if err == io.EOF {
@@ -98,7 +110,7 @@ func (l *Lexer) next() rune {
 	return r
 }
 
-func (l *Lexer) backup() {
+func (l *DefaultLexer) backup() {
 	if !l.eof {
 		if err := l.Reader.UnreadRune(); err != nil {
 			l.err = err
@@ -109,13 +121,13 @@ func (l *Lexer) backup() {
 	}
 }
 
-func (l *Lexer) peek() (r rune) {
+func (l *DefaultLexer) peek() (r rune) {
 	r = l.next()
 	l.backup()
 	return
 }
 
-func (l *Lexer) consume(validFn func(r rune) bool) bool {
+func (l *DefaultLexer) consume(validFn func(r rune) bool) bool {
 	r := l.next()
 	if validFn(r) {
 		l.buff = append(l.buff, r)
@@ -125,13 +137,13 @@ func (l *Lexer) consume(validFn func(r rune) bool) bool {
 	return false
 }
 
-func (l *Lexer) consumeUntilInvalid(validFn func(r rune) bool) {
+func (l *DefaultLexer) consumeUntilInvalid(validFn func(r rune) bool) {
 	for l.consume(validFn) {
 	}
 }
 
 //emit clears the current buffer &
-func (l *Lexer) emit(tType TokenType) {
+func (l *DefaultLexer) emit(tType TokenType) {
 	val := string(l.buff)
 	if tType == TOKEN_ERROR {
 		val = fmt.Sprintf("error reading expression: %s", l.err.Error())
@@ -143,16 +155,22 @@ func (l *Lexer) emit(tType TokenType) {
 	}
 	l.buff = l.buff[:0]
 	l.start = l.pos
-	l.out <- token
+	l.tokens <- token
 }
 
-func (l *Lexer) Run() {
-	for fn := lexNextToken; fn != nil; {
-		fn = fn(l)
-	}
+func (l *DefaultLexer) Run() {
+	go func() {
+		for fn := lexNextToken; fn != nil; {
+			fn = fn(l)
+		}
+	}()
 }
 
-func lexNextToken(l *Lexer) stateFn {
+func (l *DefaultLexer) NextToken() *Token {
+	return <-l.tokens
+}
+
+func lexNextToken(l *DefaultLexer) stateFn {
 	r := l.peek()
 	switch {
 	case l.eof:
@@ -163,6 +181,10 @@ func lexNextToken(l *Lexer) stateFn {
 		return lexNextToken
 	case unicode.IsLetter(r): //ident must start with a letter but can contain alphanumerics & underscores
 		l.consumeUntilInvalid(isIdentChar)
+		if string(l.buff) == "true" || string(l.buff) == "false" {
+			l.emit(TOKEN_BOOL)
+			return lexNextToken
+		}
 		l.emit(TOKEN_IDENT)
 		return lexNextToken
 	case r == '.':
@@ -189,14 +211,24 @@ func lexNextToken(l *Lexer) stateFn {
 		l.consume(func(r rune) bool { return true })
 		l.emit(TOKEN_RINDEX)
 		return lexNextToken
-	case isOperator(r): //operators are single runes so we can do a single consume
-		l.consume(isOperator)
-		l.emit(TOKEN_OPERATOR)
+	case r == '#':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_ALL_VALUES)
 		return lexNextToken
-	case isComparator(r): //operators can be 1 or 2 runes. We know the 1st consume will succeed. We don't care if the 2nd does or not!
-		l.consume(isComparator)
-		l.consume(isComparator)
-		l.emit(TOKEN_COMPARATOR)
+	case isBinaryOperator(r): //operators are single runes so we can do a single consume
+		l.consume(isBinaryOperator)
+		l.emit(TOKEN_BINARY_OPERATOR)
+		return lexNextToken
+	case isComparator(r): //We know we have a conflict with "!" used as both a logical not & also !=
+		l.consume(isComparator) //consime the value we already peeked (r)
+		r2 := l.peek()          //peek at the next one
+		if isUnaryOperator(r) && !isComparator(r2) {
+			l.consume(isUnaryOperator)
+			l.emit(TOKEN_UNARY_OPERATOR)
+		} else {
+			l.consume(isComparator)
+			l.emit(TOKEN_COMPARATOR)
+		}
 		return lexNextToken
 	case isQuote(r):
 		return lexStringLiteral
@@ -209,7 +241,7 @@ func lexNextToken(l *Lexer) stateFn {
 	return nil
 }
 
-func lexNumber(l *Lexer) stateFn {
+func lexNumber(l *DefaultLexer) stateFn {
 	for l.consume(unicode.IsDigit) {
 	}
 	if l.peek() == '.' {
@@ -221,14 +253,14 @@ func lexNumber(l *Lexer) stateFn {
 	return lexNextToken
 }
 
-func lexFloat(l *Lexer) stateFn {
+func lexFloat(l *DefaultLexer) stateFn {
 	for l.consume(unicode.IsDigit) {
 	}
 	l.emit(TOKEN_FLOAT)
 	return lexNextToken
 }
 
-func lexStringLiteral(l *Lexer) stateFn {
+func lexStringLiteral(l *DefaultLexer) stateFn {
 	//Get quote starting character so we know what will close the string
 	start := l.peek()
 	//Consume the initial quote
@@ -244,8 +276,14 @@ func lexStringLiteral(l *Lexer) stateFn {
 func isIdentChar(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r)
 }
-func isOperator(r rune) bool {
+func isBinaryOperator(r rune) bool {
+	//TODO: deal with ! (not) - the only unary operator
 	return strings.ContainsRune("+-/*%^", r)
+}
+
+func isUnaryOperator(r rune) bool {
+	//TODO: deal with ! (not) - the only unary operator
+	return strings.ContainsRune("!", r)
 }
 
 func isComparator(r rune) bool {
