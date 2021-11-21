@@ -199,8 +199,7 @@ func TestFilterArrayCount(t *testing.T) {
 			NewFunctionCall(
 				sel,
 				[]Node{
-					ValuesNode{},
-					NewExpression(NewProperty("env", nil)),
+					NewProperty("env", nil),
 					NewLiteral("$"),
 					NewExpression(
 						NewFunctionCall(
@@ -252,8 +251,7 @@ func TestFilterMapCount(t *testing.T) {
 			NewFunctionCall(
 				sel,
 				[]Node{
-					ValuesNode{},
-					NewExpression(NewProperty("env", nil)),
+					NewProperty("env", nil),
 					NewLiteral("$"),
 					NewExpression(
 						NewFunctionCall(
