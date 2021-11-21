@@ -19,7 +19,7 @@ func TestSelectArray(t *testing.T) {
 		t.Fatal(err)
 	}
 	var arr [5]Object
-	arr[0] = Object{"0"}
+	arr[0] = Object{"9"}
 	arr[1] = Object{"1"}
 	arr[2] = Object{"2"}
 	arr[3] = Object{"1"}
@@ -27,16 +27,15 @@ func TestSelectArray(t *testing.T) {
 	fc := NewFunctionCall(
 		sel,
 		[]Node{
-			ValuesNode{},
-			NewExpression(NewProperty("env", nil)),
-			NewLiteral("$"),
+			NewProperty("array", nil),
+			NewLiteral("entry"),
 			NewExpression(
-				NewFunctionCall(eq, []Node{NewProperty("Value", NewProperty("$", nil)), NewLiteral("1")}, 0),
+				NewFunctionCall(eq, []Node{NewProperty("Value", NewProperty("entry", nil)), NewLiteral("1")}, 0),
 			),
 		},
 		0,
 	)
-	res, err := fc.Evaluate(Values{"env": arr})
+	res, err := fc.Evaluate(Values{"array": arr})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,8 +67,7 @@ func TestSelectSlice(t *testing.T) {
 	fc := NewFunctionCall(
 		sel,
 		[]Node{
-			ValuesNode{},
-			NewExpression(NewProperty("env", nil)),
+			NewProperty("list", nil),
 			NewLiteral("$"),
 			NewExpression(
 				NewFunctionCall(eq, []Node{NewProperty("Value", NewProperty("$", nil)), NewLiteral("1")}, 0),
@@ -77,7 +75,7 @@ func TestSelectSlice(t *testing.T) {
 		},
 		0,
 	)
-	res, err := fc.Evaluate(Values{"env": s})
+	res, err := fc.Evaluate(Values{"list": s})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,16 +106,16 @@ func TestSelectMap(t *testing.T) {
 	fc := NewFunctionCall(
 		sel,
 		[]Node{
-			ValuesNode{},
-			NewExpression(NewProperty("env", nil)),
-			NewLiteral("$"),
+			NewProperty("listOfValues", nil),
+			NewLiteral("$entry"),
 			NewExpression(
-				NewFunctionCall(eq, []Node{NewProperty("Value", NewProperty("$", nil)), NewLiteral("One")}, 0),
+				NewFunctionCall(eq, []Node{NewProperty("Value", NewProperty("$entry", nil)), NewProperty("$0", nil)}, 0),
 			),
+			NewProperty("filter", nil),
 		},
 		0,
 	)
-	res, err := fc.Evaluate(Values{"env": m})
+	res, err := fc.Evaluate(Values{"listOfValues": m, "filter": "One"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,8 +138,7 @@ func TestSelectInvalidType(t *testing.T) {
 	fc := NewFunctionCall(
 		sel,
 		[]Node{
-			ValuesNode{},
-			NewExpression(NewProperty("env", nil)),
+			NewProperty("env", nil),
 			NewLiteral("$"),
 			NewExpression(nil),
 		},

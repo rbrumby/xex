@@ -51,6 +51,30 @@ func TestFuncMethProp(t *testing.T) {
 	}
 }
 
+func TestVariadicConcat(t *testing.T) {
+	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
+		`concat("123","-","456","-","789",": ", car.Driver.Name)`,
+	)))
+	par := DefaultParser{
+		lexer: lex,
+	}
+	ex, err := par.Parse()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := Car{
+		Driver: &Driver{Name: "Lando"},
+	}
+	res, err := ex.Evaluate(Values{"car": c})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res != "123-456-789: Lando" {
+		t.Errorf(`Expected "123-456-789: Lando", got %s`, res)
+	}
+}
+
 func TestPeekNext(t *testing.T) {
 	p := &DefaultParser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader("test 123 abc"))),

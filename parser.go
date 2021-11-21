@@ -6,31 +6,8 @@ import (
 	"strconv"
 )
 
-/*
-	ref  = prop | func | meth
-	node = lit | ref
-	lit  = int | float | string | bool
-	idx  = lindex int rindex
-	func = ident lparen ( node ( delim node )* )+ rparen ( idx )+
-	prop = ( node sep )* ident ( idx )+
-	meth = ( node sep )* ident lparen ( node ( delim node )* )+ rparen ( idx )+
-
-	6 * some.prop.method(5, 3 - 1) + 3
-	INT WHITE OPER WHITE IDENT SEP IDENT SEP IDENT LPAREN INT SEP WHITE INT WHITE OPER WHITE INT RPAREN WHITE OPER WHITE INT
-*/
-
-type NodeType int
-
-const (
-	TypeProperty NodeType = iota
-	TypeString
-	TypeInteger
-	TypeFLoat
-	TypeFunction
-	TypeMethod
-)
-
 var binaryFuncMap map[string]string = map[string]string{
+	"&":  "concat",
 	"+":  "add",
 	"-":  "subtract",
 	"*":  "multiply",

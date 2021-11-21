@@ -61,6 +61,6 @@ func registerCoreBuiltins() {
 		),
 	)
 
-	//TODO: Greater, less than, etc
+	//TODO: and, or, Greater, less than, etc
 
 }

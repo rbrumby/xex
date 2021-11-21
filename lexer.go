@@ -263,12 +263,10 @@ func lexFloat(l *DefaultLexer) stateFn {
 func lexStringLiteral(l *DefaultLexer) stateFn {
 	//Get quote starting character so we know what will close the string
 	start := l.peek()
-	//Consume the initial quote
-	l.consume(isQuote)
-	//Consume until we find the matching character
-	l.consumeUntilInvalid(func(r rune) bool { return r != start })
-	//Then consume the closing quote
-	l.consume(isQuote)
+	l.consume(isQuote)                                             //Consume the initial quote
+	l.consumeUntilInvalid(func(r rune) bool { return r != start }) //Consume until we find the matching character
+	l.consume(isQuote)                                             //Then consume the closing quote
+	l.buff = l.buff[1 : len(l.buff)-1]                             //discard leading & trailing quote runes
 	l.emit(TOKEN_STRING)
 	return lexNextToken
 }

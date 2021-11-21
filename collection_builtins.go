@@ -56,64 +56,59 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"select",
-			`Returns the elements in the passed in slice / array or map for which expression evaluates to true.
+			`Returns the elements in the passed in collection (slice / array or map) for which expression evaluates to true.
 			 If an array is passed in, it is returned as a slice.
-			 If coll refers to a map, expression is evaluated on the map value, not the key. 
-			 - values should always be a Noop which will return the Values being evaluated
-			 - coll is a *Expression which evaluates to the collection (array, slice or map) being selected
-			 - elemKey is a string which will be used in the expression to refer to the elements of elem
-			 - expression is the expression to be evaluated on each node`,
-			func(values Values, coll *Expression, elemKey string, expression *Expression) (interface{}, error) {
-				elem, err := coll.Evaluate(values)
-				if err != nil {
-					return nil, fmt.Errorf("selection evaluation error: %s", err)
+	         If coll refers to a map, expression is evaluated on the map value, not the key.
+			 coll is the collection to select from.
+			 forEach is the name by which we will refer to each entry in coll.
+			 expr is the expression to apply to using collName to reference values in coll. MUST return a bool (true or false).
+			 refs is an optional list values which can be referenced as $0, $1, etc within the expression.
+			 Example:
+			 //BookList is a collection. For each "book" in the list, we want to evaluate the equals Expression.
+			 //We also pass enother evaluated value SelectedAuthor which will be accessible as $0 in our expression.
+			 select(root.BookList, "book", "equals(book.Author, $0)", root.SelectedAuthor)`,
+			func(coll interface{}, forEach string, expr *Expression, refs ...interface{}) (interface{}, error) {
+				values := make(Values)
+				//Use the indices of refs to create a map of $n values
+				for refIdx, ref := range refs {
+					values[fmt.Sprintf("$%d", refIdx)] = ref
 				}
-
-				//We'll take a copy of values because we will add the recordKey entry for the current record (and don't want to overwrite)
-				//anything in the original Values graph.
-				valcp := make(Values)
-				for vk, vv := range values {
-					valcp[vk] = vv
-				}
-
-				//out is the output result slice
 				var out reflect.Value
-				switch reflect.TypeOf(elem).Kind() {
+				switch reflect.TypeOf(coll).Kind() {
 				case reflect.Array, reflect.Slice:
-					logger.Tracef("selecting array/slice: input is %s of %s", reflect.TypeOf(elem).Kind(), reflect.TypeOf(elem).Elem().Name())
-					out = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(elem).Elem()), 0, 0)
-					for i := 0; i < reflect.ValueOf(elem).Len(); i++ {
-						//Add the current record from the array/slice to valcp & pass it down to the expression for evaluation
-						valcp[elemKey] = reflect.ValueOf(elem).Index(i).Interface()
-						eval, err := expression.Evaluate(valcp)
+					logger.Debugf("selecting array/slice: input is %s of %s", reflect.TypeOf(coll).Kind(), reflect.TypeOf(coll).Elem().Name())
+					out = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(coll).Elem()), 0, 0)
+					for i := 0; i < reflect.ValueOf(coll).Len(); i++ {
+						values[forEach] = reflect.ValueOf(coll).Index(i).Interface()
+						logger.Debugf("Checking if %v matches expression %v", values[forEach], expr)
+						eval, err := expr.Evaluate(values)
 						if err != nil {
 							return nil, fmt.Errorf("error selecting array/slice: %s", err)
 						}
 						if e, ok := eval.(bool); ok && e {
 							//expression evaluated to true, add the current record to our output slice
-							out = reflect.Append(out, reflect.ValueOf(valcp[elemKey]))
+							out = reflect.Append(out, reflect.ValueOf(values[forEach]))
 						} else if !ok {
 							return nil, fmt.Errorf("selector expression must return bool (true/false) not %q", reflect.TypeOf(eval).String())
 						}
 					}
 				case reflect.Map:
-					logger.Tracef("select map: input is %s of %s", reflect.TypeOf(elem).Kind(), reflect.TypeOf(elem).Elem().Name())
-					out = reflect.MakeMap(reflect.MapOf(reflect.TypeOf(elem).Key(), reflect.TypeOf(elem).Elem()))
-					for _, k := range reflect.ValueOf(elem).MapKeys() {
-						//Add the current value from the map to valcp & pass it down to the expression for evaluation
-						valcp[elemKey] = reflect.ValueOf(elem).MapIndex(k).Interface()
-						eval, err := expression.Evaluate(valcp)
+					logger.Tracef("selecting map: input is %s of %s", reflect.TypeOf(coll).Kind(), reflect.TypeOf(coll).Elem().Name())
+					out = reflect.MakeMap(reflect.MapOf(reflect.TypeOf(coll).Key(), reflect.TypeOf(coll).Elem()))
+					for _, k := range reflect.ValueOf(coll).MapKeys() {
+						values[forEach] = reflect.ValueOf(coll).MapIndex(k).Interface()
+						eval, err := expr.Evaluate(values)
 						if err != nil {
 							return nil, fmt.Errorf("error selecting from map: %s", err)
 						}
 						if e, ok := eval.(bool); ok && e {
-							out.SetMapIndex(reflect.ValueOf(k.Interface()), reflect.ValueOf(valcp[elemKey]))
+							out.SetMapIndex(reflect.ValueOf(k.Interface()), reflect.ValueOf(values[forEach]))
 						} else if !ok {
 							return nil, fmt.Errorf("selector expression must return bool (true/false) not %q", reflect.TypeOf(eval).String())
 						}
 					}
 				default:
-					return 0, fmt.Errorf("cannot select from %q", reflect.TypeOf(elem).String())
+					return 0, fmt.Errorf("cannot select from %q", reflect.TypeOf(coll).String())
 				}
 				logger.Tracef("select: response is a %q of %q", reflect.TypeOf(out.Interface()).Kind(), reflect.TypeOf(out.Interface()).Elem().Name())
 				return out.Interface(), nil
@@ -139,4 +134,19 @@ func registerCollectionBuiltins() {
 type MapEntry struct {
 	key   interface{}
 	value interface{}
+}
+
+//ValuesNode is a Node which returns the Values object being processed.
+type ValuesNode struct{}
+
+func (n ValuesNode) Name() string {
+	return "<ValuesNode>"
+}
+
+func (n ValuesNode) Evaluate(values Values) (interface{}, error) {
+	return values, nil
+}
+
+func (n ValuesNode) String() string {
+	return n.Name()
 }

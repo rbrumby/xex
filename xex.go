@@ -51,21 +51,6 @@ func (e *Expression) String() string {
 	return fmt.Sprintf("Expression:\n%s\n", e.root)
 }
 
-//ValuesNode is a Node which returns the Values object being processed.
-type ValuesNode struct{}
-
-func (n ValuesNode) Name() string {
-	return "<ValuesNode>"
-}
-
-func (n ValuesNode) Evaluate(values Values) (interface{}, error) {
-	return values, nil
-}
-
-func (n ValuesNode) String() string {
-	return n.Name()
-}
-
 //FunctionCall is a Node in the compiled expression tree which represents a call to a funtion with Nodes as its arguments.
 type FunctionCall struct {
 	function  *Function
