@@ -276,7 +276,7 @@ func isIdentChar(r rune) bool {
 }
 func isBinaryOperator(r rune) bool {
 	//TODO: deal with ! (not) - the only unary operator
-	return strings.ContainsRune("+-/*%^", r)
+	return strings.ContainsRune("+-/*%^&", r)
 }
 
 func isUnaryOperator(r rune) bool {

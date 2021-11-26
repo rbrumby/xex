@@ -101,7 +101,7 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 }
 
 func (f *FunctionCall) String() string {
-	return fmt.Sprintf("FunctionCall:\n%s(%v)\n", f.function.name, f.arguments)
+	return fmt.Sprintf("FunctionCall: %s(%s)", f.function.name, f.arguments)
 }
 
 //Literal is a Node in the compiled expression tree which represents a literal value.
@@ -122,7 +122,7 @@ func (l *Literal) Evaluate(values Values) (interface{}, error) {
 }
 
 func (l *Literal) String() string {
-	return fmt.Sprintf("Literal:\n%s\n", l.value)
+	return fmt.Sprintf("Literal: %s", l.value)
 }
 
 //MethodCall is a Node in the compiled expression tree which represents a call to a method on a parent object.
@@ -153,7 +153,7 @@ func (mc *MethodCall) Arg(arg Node) {
 }
 
 func (m *MethodCall) String() string {
-	return fmt.Sprintf("MethodCall:\n%s(%v)\n", m.name, m.arguments)
+	return fmt.Sprintf("MethodCall: %s(%s)", m.name, m.arguments)
 }
 
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
@@ -258,5 +258,5 @@ func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
 }
 
 func (p *Property) String() string {
-	return fmt.Sprintf("Property:%s\n", p.name)
+	return fmt.Sprintf("Property: %s", p.name)
 }

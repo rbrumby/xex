@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	"github.com/coreos/capnslog"
 )
-
-func init() {
-	// Repolog = capnslog.MustRepoLogger("github.com/rbrumby/xex")
-	// Repolog.SetRepoLogLevel(capnslog.TRACE)
-	capnslog.SetGlobalLogLevel(capnslog.TRACE)
-}
 
 func TestMain(m *testing.M) {
 	//TODO: Make this configurable
-	//Repolog.SetRepoLogLevel(capnslog.TRACE)
-	cfg, err := Repolog.ParseLogLevelConfig("xex=DEBUG")
+	// Repolog.SetRepoLogLevel(capnslog.INFO)
+	cfg, err := Repolog.ParseLogLevelConfig("xex=TRACE")
 	if err != nil {
 		panic(err)
 	}

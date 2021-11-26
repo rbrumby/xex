@@ -111,3 +111,21 @@ func TestPeekNext(t *testing.T) {
 		t.Errorf("expected eof. Got %v", eof)
 	}
 }
+
+func TestFunctionalize(t *testing.T) {
+	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(`string((4 + 10) * 3) + "_hello"`)))
+	par := DefaultParser{
+		lexer: lex,
+	}
+	ex, err := par.Parse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	answer, err := ex.Evaluate(Values{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if answer != "42_hello" {
+		t.Errorf("Expected 42_hello. Got %d", answer)
+	}
+}

@@ -1,11 +1,22 @@
 package xex
 
 import (
+	"fmt"
 	"strings"
 )
 
 //Set up built-in string functions
 func registerStringBuiltins() {
+	RegisterFunction(
+		NewFunction(
+			"string",
+			`Converts an input into a string using fmt.Sprint`,
+			func(in interface{}) string {
+				return fmt.Sprint(in)
+			},
+		),
+	)
+
 	RegisterFunction(
 		NewFunction(
 			"concat",

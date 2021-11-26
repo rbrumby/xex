@@ -6,9 +6,14 @@ import (
 	"strconv"
 )
 
+//TODO:
+// operator precedence (I don't think that will be easy!!)
+// unary functions (! = not?)
+// additional binary functions > >= <= <
+// explicit conversion is still required in the expression
+
 var binaryFuncMap map[string]string = map[string]string{
-	"&":  "concat",
-	"+":  "add",
+	"+":  "addOrConcat",
 	"-":  "subtract",
 	"*":  "multiply",
 	"/":  "divide",
@@ -17,8 +22,6 @@ var binaryFuncMap map[string]string = map[string]string{
 	"==": "equals",
 	//TODO: Greater than, etc
 }
-
-///TODO: Not (unaryFuncMap)
 
 type Parser interface {
 	Parse() (node *Expression, err error)
@@ -61,6 +64,9 @@ func (p *DefaultParser) peek(index int) (tok *Token) {
 func (p *DefaultParser) Parse() (ex *Expression, err error) {
 	go p.lexer.Run()
 	root, err := p.parse(nil)
+	if err != nil {
+		return nil, err
+	}
 	if root == nil {
 		err = errors.New("empty expression")
 	}
@@ -77,41 +83,67 @@ func (p *DefaultParser) parse(parent Node) (node Node, err error) {
 	case this.Typ == TOKEN_IDENT && next.Typ == TOKEN_LPAREN:
 		//This is a call (method or function - not Foo Fighters)
 		logger.Debugf("Func or method, %v followed by %v\n", this, next)
-		return p.parseCall(parent, this)
+		call, err := p.parseCall(parent, this)
+		if err != nil {
+			return nil, err
+		}
+		return p.functionalize(call)
+
+	case this.Typ == TOKEN_LPAREN:
+		//This is a use of parentheses for logical grouping - make a nil function
+		this = &Token{
+			Typ:   TOKEN_IDENT,
+			Start: this.Start,
+			Value: "nil",
+		}
+		//we already consumed the LPAREN
+		logger.Debugf("Nil function, %v followed by %v\n", this, next)
+		call, err := p.parseCall(nil, this)
+		if err != nil {
+			return nil, err
+		}
+		return p.functionalize(call)
 
 	case this.Typ == TOKEN_IDENT && next.Typ == TOKEN_SEPARATOR:
 		//This is a Parent Property
 		logger.Debugf("Property with children, %v followed by %v\n", this, next)
 		p.next() //consume the SEPARATOR
 		prop := NewProperty(this.Value, parent)
+		//Don't try to functionalize - we already know "next" isn't a binary operator!!
 		return p.parse(prop)
 
 	case this.Typ == TOKEN_IDENT:
 		//This is a Property with no children
 		logger.Debugf("Property without children, %v followed by %v\n", this, next)
-		return NewProperty(this.Value, parent), nil
+		return p.functionalize(NewProperty(this.Value, parent))
 
 	case this.Typ == TOKEN_STRING:
 		logger.Debugf("String literal, %v \n", this)
-		return NewLiteral(this.Value), nil
+		return p.functionalize(NewLiteral(this.Value))
 
 	case this.Typ == TOKEN_INT:
 		logger.Debugf("Int literal, %v \n", this)
 		val, err := strconv.ParseInt(this.Value, 0, 64)
-		return NewLiteral(val), err
+		if err != nil {
+			return nil, err
+		}
+		return p.functionalize(NewLiteral(val))
 
 	case this.Typ == TOKEN_FLOAT:
 		logger.Debugf("Float literal, %v \n", this)
 		val, err := strconv.ParseFloat(this.Value, 64)
-		return NewLiteral(val), err
+		if err != nil {
+			return nil, err
+		}
+		return p.functionalize(NewLiteral(val))
 
 	case this.Typ == TOKEN_BOOL:
 		logger.Debugf("Bool literal, %v \n", this)
 		val, err := strconv.ParseBool(this.Value)
-		return NewLiteral(val), err
-		// case this.Typ == TOKEN_DELIMITER:
-		// 	logger.Debugf("Found %s, nothing to do\n", this.Typ)
-		// 	return nil, nil
+		if err != nil {
+			return nil, err
+		}
+		return p.functionalize(NewLiteral(val))
 	}
 	return nil, fmt.Errorf("unexpected token: %v (%s)", this.Value, this.Typ.String())
 }
@@ -177,4 +209,28 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 		}
 		return mc, nil
 	}
+}
+
+func (p *DefaultParser) functionalize(node Node) (Node, error) {
+	next := p.peek(0)
+	if next.Typ == TOKEN_BINARY_OPERATOR {
+		next = p.next() //consume the binary operator
+		if binFunc, isBinFunc := binaryFuncMap[next.Value]; isBinFunc {
+			fn, err := GetFunction(binFunc)
+			if err != nil {
+				return nil, fmt.Errorf("binary operator %q mapped to unknown function %q", next, binFunc)
+			}
+			args := make([]Node, 2)
+			args[0] = node
+			args[1], err = p.parse(nil)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing binary function argument: %s", err)
+			}
+			logger.Debugf("functionalize created function %q with args %s", fn.name, args)
+			//TODO: indexing - remove hardcoded zero
+			return NewFunctionCall(fn, args, 0), nil
+		}
+		return nil, fmt.Errorf("unrecognized binary operator %s", next)
+	}
+	return node, nil
 }

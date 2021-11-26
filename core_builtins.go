@@ -61,6 +61,39 @@ func registerCoreBuiltins() {
 		),
 	)
 
+	RegisterFunction(
+		NewFunction(
+			"addOrConcat",
+			`Chooses to call add or concat depending on args`,
+			func(val1 interface{}, val2 interface{}) (interface{}, error) {
+				switch val1.(type) {
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+					switch val2.(type) {
+					case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+						add, err := GetFunction("add")
+						if err != nil {
+							return nil, err
+						}
+						res, err := add.Exec(val1, val2)
+						if err != nil {
+							return nil, err
+						}
+						return res[0], err
+					}
+				}
+				concat, err := GetFunction("concat")
+				if err != nil {
+					return nil, err
+				}
+				res, err := concat.Exec(val1, val2)
+				if err != nil {
+					return nil, err
+				}
+				return res[0], err
+			},
+		),
+	)
+
 	//TODO: and, or, Greater, less than, etc
 
 }
