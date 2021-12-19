@@ -184,6 +184,14 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 		}
 	}
 	logger.Debugf("Finished collecting args for %s\n", ident.Value)
+	//If there is an index declared, set it
+	callRtnIdx := 0
+	if p.peek(0).Typ == TOKEN_LINDEX {
+		callRtnIdx, err = p.parseIndex()
+		if err != nil {
+			return nil, err
+		}
+	}
 	if parent == nil {
 		//FunctionCall
 		fn, err := GetFunction(ident.Value)
@@ -191,7 +199,7 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 			return nil, fmt.Errorf("parse error (%s): %s,", ident.String(), err)
 		}
 		//TODO: Indexing output - remove hardcoded zero
-		fc := NewFunctionCall(fn, args, 0)
+		fc := NewFunctionCall(fn, args, callRtnIdx)
 		if p.peek(0).Typ == TOKEN_SEPARATOR {
 			//we have a child
 			p.next()           //consume the separator
@@ -201,7 +209,7 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 	} else {
 		//MethodCall
 		//TODO: Indexing output - remove hardcoded zero
-		mc := NewMethodCall(ident.Value, parent, args, 0)
+		mc := NewMethodCall(ident.Value, parent, args, callRtnIdx)
 		if p.peek(0).Typ == TOKEN_SEPARATOR {
 			//we have a child
 			p.next()           //consume the separator
@@ -233,4 +241,23 @@ func (p *DefaultParser) functionalize(node Node) (Node, error) {
 		return nil, fmt.Errorf("unrecognized binary operator %s", next)
 	}
 	return node, nil
+}
+
+func (p *DefaultParser) parseIndex() (index int, err error) {
+	//user specified the argument they want returned from the call
+	lin := p.next() //consume lindex
+	logger.Debugf("Found %s, skipped & consumed it\n", lin)
+	if p.peek(0).Typ != TOKEN_INT {
+		return 0, fmt.Errorf("unexpected call index: %s - Expected integer", p.peek(0))
+	}
+	index, err = strconv.Atoi(p.next().Value)
+	if err != nil {
+		return 0, fmt.Errorf("error parsing call index: %s", err)
+	}
+	if p.peek(0).Typ != TOKEN_RINDEX {
+		return 0, fmt.Errorf("expeceted end of call index. found %s", err)
+	}
+	rin := p.next() //consume rindex
+	logger.Debugf("Found %s, skipped & consumed it\n", rin)
+	return
 }

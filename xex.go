@@ -97,6 +97,9 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
 	}
+	if len(results) <= fc.Index() {
+		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indexex start at zero)", fc.Index(), fc.Name(), len(results))
+	}
 	return results[fc.Index()], nil
 }
 
@@ -200,6 +203,9 @@ func (mc *MethodCall) Evaluate(values Values) (result interface{}, err error) {
 	//If last result is an error, split it from the result slice & return as a separate error.
 	if errchk, ok := results[len(results)-1].Interface().(error); ok {
 		err = errchk
+	}
+	if len(results) <= mc.Index() {
+		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indexex start at zero)", mc.Index(), mc.Name(), len(results))
 	}
 	result = results[mc.Index()].Interface()
 	return
