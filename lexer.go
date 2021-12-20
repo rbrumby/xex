@@ -21,6 +21,8 @@ const (
 	TOKEN_RPAREN
 	TOKEN_LINDEX
 	TOKEN_RINDEX
+	TOKEN_LRESULT
+	TOKEN_RRESULT
 	TOKEN_BINARY_OPERATOR
 	TOKEN_UNARY_OPERATOR
 	TOKEN_COMPARATOR
@@ -42,6 +44,8 @@ var tokenTypes = []string{
 	TOKEN_RPAREN:          "RIGHT_PARENTHESIS",
 	TOKEN_LINDEX:          "LEFT_INDEX",
 	TOKEN_RINDEX:          "RIGHT_INDEX",
+	TOKEN_LRESULT:         "LEFT_RESULT",
+	TOKEN_RRESULT:         "RIGHT_RESULT",
 	TOKEN_BINARY_OPERATOR: "BINARY_OPERATOR",
 	TOKEN_UNARY_OPERATOR:  "UNARY_OPERATOR",
 	TOKEN_COMPARATOR:      "COMPARATOR",
@@ -210,6 +214,14 @@ func lexNextToken(l *DefaultLexer) stateFn {
 	case r == ']':
 		l.consume(func(r rune) bool { return true })
 		l.emit(TOKEN_RINDEX)
+		return lexNextToken
+	case r == '{':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_LRESULT)
+		return lexNextToken
+	case r == '}':
+		l.consume(func(r rune) bool { return true })
+		l.emit(TOKEN_RRESULT)
 		return lexNextToken
 	case r == '#':
 		l.consume(func(r rune) bool { return true })

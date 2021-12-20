@@ -13,7 +13,7 @@ import (
 // explicit conversion is still required in the expression
 
 var binaryFuncMap map[string]string = map[string]string{
-	"+":  "addOrConcat",
+	"+":  "add_or_concat",
 	"-":  "subtract",
 	"*":  "multiply",
 	"/":  "divide",
@@ -186,8 +186,8 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 	logger.Debugf("Finished collecting args for %s\n", ident.Value)
 	//If there is an index declared, set it
 	callRtnIdx := 0
-	if p.peek(0).Typ == TOKEN_LINDEX {
-		callRtnIdx, err = p.parseIndex()
+	if p.peek(0).Typ == TOKEN_LRESULT {
+		callRtnIdx, err = p.parseReturnIndex()
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +243,7 @@ func (p *DefaultParser) functionalize(node Node) (Node, error) {
 	return node, nil
 }
 
-func (p *DefaultParser) parseIndex() (index int, err error) {
+func (p *DefaultParser) parseReturnIndex() (index int, err error) {
 	//user specified the argument they want returned from the call
 	lin := p.next() //consume lindex
 	logger.Debugf("Found %s, skipped & consumed it\n", lin)
@@ -254,7 +254,7 @@ func (p *DefaultParser) parseIndex() (index int, err error) {
 	if err != nil {
 		return 0, fmt.Errorf("error parsing call index: %s", err)
 	}
-	if p.peek(0).Typ != TOKEN_RINDEX {
+	if p.peek(0).Typ != TOKEN_RRESULT {
 		return 0, fmt.Errorf("expeceted end of call index. found %s", err)
 	}
 	rin := p.next() //consume rindex

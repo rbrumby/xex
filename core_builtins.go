@@ -63,7 +63,7 @@ func registerCoreBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
-			"addOrConcat",
+			"add_or_Concat",
 			`Chooses to call add or concat depending on args`,
 			func(val1 interface{}, val2 interface{}) (interface{}, error) {
 				switch val1.(type) {

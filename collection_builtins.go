@@ -118,6 +118,29 @@ func registerCollectionBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
+			"index_of",
+			`Returns the entry from the passed collection at the requested index.
+			 - coll must be map, array or slice
+			 - index is the index / key to extract from coll
+			`,
+			func(coll interface{}, index interface{}) (interface{}, error) {
+				switch reflect.TypeOf(coll).Kind() {
+				case reflect.Array, reflect.Slice:
+					idx, ok := index.(int)
+					if !ok {
+						return nil, fmt.Errorf("index_of: cannot access array / slice using a %s", reflect.TypeOf(coll).String())
+					}
+					return reflect.ValueOf(coll).Index(idx).Interface(), nil
+				case reflect.Map:
+					return reflect.ValueOf(coll).MapIndex(reflect.ValueOf(index)).Interface(), nil
+				}
+				return nil, fmt.Errorf("index_of: epected array/slice, not %s", reflect.TypeOf(coll).Kind())
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
 			"count",
 			`Returns the number of elements in the passed in slice / array or map.`,
 			func(in interface{}) (int, error) {

@@ -362,3 +362,33 @@ func TestBadMap(t *testing.T) {
 		t.Fatal("map creation should fail due to inconsistent types")
 	}
 }
+
+func TestIndexOfSlice(t *testing.T) {
+	s := []string{"zero", "one", "two", "three"}
+	f, err := GetFunction("index_of")
+	if err != nil {
+		t.Error(err)
+	}
+	res, err := f.Exec(s, 2)
+	if err != nil {
+		t.Error(err)
+	}
+	if res[0] != "two" {
+		t.Errorf("Expected two, got %s", res[0])
+	}
+}
+
+func TestIndexOfMap(t *testing.T) {
+	s := map[int]string{0: "zero", 1: "one", 2: "two", 3: "three"}
+	f, err := GetFunction("index_of")
+	if err != nil {
+		t.Error(err)
+	}
+	res, err := f.Exec(s, 2)
+	if err != nil {
+		t.Error(err)
+	}
+	if res[0] != "two" {
+		t.Errorf("Expected two, got %s", res[0])
+	}
+}

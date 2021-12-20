@@ -22,7 +22,7 @@ func TestFuncMethProp(t *testing.T) {
 	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
 		`add(
 			float64(
-				multiply( car.GetGearBox()[0].Gear, uint8(99) )
+				multiply( car.GetGearBox(){0}.Gear, uint8(99) )
 			),
 			3.5)`,
 	)))
@@ -53,7 +53,7 @@ func TestFuncMethProp(t *testing.T) {
 
 func TestVariadicConcat(t *testing.T) {
 	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
-		`concat("123","-","456","-","789",": ", car.Driver.Name)[0]`,
+		`concat("123","-","456","-","789",": ", car.Driver.Name){0}`,
 	)))
 	par := DefaultParser{
 		lexer: lex,
