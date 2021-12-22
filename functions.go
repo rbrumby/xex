@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 )
 
 var functions map[string]*Function
@@ -19,15 +20,20 @@ func init() {
 	registerCollectionBuiltins()
 }
 
+type FunctionDocumentation struct {
+	Text       string
+	Parameters map[string]string
+}
+
 //Function represents a xex function which can be dynamically invoked.
 type Function struct {
 	name          string
-	documentation string
+	documentation FunctionDocumentation
 	impl          interface{}
 }
 
 //NewFunction returns a pointer to a new Function.
-func NewFunction(name string, documentation string, implementation interface{}) *Function {
+func NewFunction(name string, documentation FunctionDocumentation, implementation interface{}) *Function {
 	f := Function{
 		name:          name,
 		documentation: documentation,
@@ -43,8 +49,14 @@ func (f *Function) Name() string {
 	return f.name
 }
 
-func (f *Function) Documentation() string {
-	return f.documentation
+func (f *Function) DocumentationString() string {
+	out := strings.Builder{}
+	out.WriteString(f.documentation.Text)
+	for k, v := range f.documentation.Parameters {
+		out.WriteRune('\n')
+		out.WriteString(k + ": " + v)
+	}
+	return out.String()
 }
 
 //validate validates that the Function implementation

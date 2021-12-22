@@ -11,7 +11,13 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"add",
-			`adds two numbers returning a single numerical result`,
+			FunctionDocumentation{
+				Text: `adds two numbers returning a single numerical result`,
+				Parameters: map[string]string{
+					"num1": "The first number to add.",
+					"num2": "The second number to add.",
+				},
+			},
 			func(num1, num2 interface{}) (interface{}, error) {
 				switch n1 := num1.(type) {
 				//First make sure we got a number in num1
@@ -56,17 +62,23 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"subtract",
-			`subtracts two numbers returning a single numerical result`,
-			func(num1, num2 interface{}) (interface{}, error) {
-				switch n1 := num1.(type) {
+			FunctionDocumentation{
+				Text: `subtracts two numbers returning a single numerical result`,
+				Parameters: map[string]string{
+					"minuend":    "The initial number to subtract from.",
+					"subtrahend": "The value to subreact from minuend.",
+				},
+			},
+			func(minuend, subtrahend interface{}) (interface{}, error) {
+				switch n1 := minuend.(type) {
 				//First make sure we got a number in num1
 				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
-					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
-						return 0, fmt.Errorf("subtract cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+					if reflect.TypeOf(minuend) != reflect.TypeOf(subtrahend) {
+						return 0, fmt.Errorf("subtract cannot use different types (%s & %s) - convert them first", reflect.TypeOf(minuend).Name(), reflect.TypeOf(subtrahend).Name())
 					}
 					//Then do all the conversions & additions (now we know both types are the same)
-					switch n2 := num2.(type) {
+					switch n2 := subtrahend.(type) {
 					case int:
 						return n1.(int) - n2, nil
 					case int8:
@@ -93,7 +105,7 @@ func registerNumberBuiltins() {
 						return n1.(float64) - n2, nil
 					}
 				}
-				return 0, fmt.Errorf("subtract can only subtract numeric types, not %s and %s", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+				return 0, fmt.Errorf("subtract can only subtract numeric types, not %s and %s", reflect.TypeOf(minuend).Name(), reflect.TypeOf(subtrahend).Name())
 			},
 		),
 	)
@@ -101,17 +113,23 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"multiply",
-			`multiplies two numbers returning a single numerical result`,
-			func(num1, num2 interface{}) (interface{}, error) {
-				switch n1 := num1.(type) {
+			FunctionDocumentation{
+				Text: `multiplies two numbers returning a single numerical result`,
+				Parameters: map[string]string{
+					"multiplicand": "The number to be multiplied.",
+					"multiplier":   "The number to multiply by.",
+				},
+			},
+			func(multiplicand, multiplier interface{}) (interface{}, error) {
+				switch n1 := multiplicand.(type) {
 				//First make sure we got a number in num1
 				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
-					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
-						return 0, fmt.Errorf("multiply cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+					if reflect.TypeOf(multiplicand) != reflect.TypeOf(multiplier) {
+						return 0, fmt.Errorf("multiply cannot use different types (%s & %s) - convert them first", reflect.TypeOf(multiplicand).Name(), reflect.TypeOf(multiplier).Name())
 					}
 					//Then do all the conversions & additions (now we know both types are the same)
-					switch n2 := num2.(type) {
+					switch n2 := multiplier.(type) {
 					case int:
 						return n1.(int) * n2, nil
 					case int8:
@@ -138,7 +156,7 @@ func registerNumberBuiltins() {
 						return n1.(float64) * n2, nil
 					}
 				}
-				return 0, fmt.Errorf("multiply can only add numeric types, not %s and %s", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+				return 0, fmt.Errorf("multiply can only add numeric types, not %s and %s", reflect.TypeOf(multiplicand).Name(), reflect.TypeOf(multiplier).Name())
 			},
 		),
 	)
@@ -146,17 +164,23 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"divide",
-			`divides two numbers returning a single numerical result`,
-			func(num1, num2 interface{}) (interface{}, error) {
-				switch n1 := num1.(type) {
+			FunctionDocumentation{
+				Text: `divides two numbers returning a single numerical result`,
+				Parameters: map[string]string{
+					"dividend": "The number to be divided.",
+					"divisor":  "The number to divide by.",
+				},
+			},
+			func(dividend, divisor interface{}) (interface{}, error) {
+				switch n1 := dividend.(type) {
 				//First make sure we got a number in num1
 				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
 					//Then make sure num2 is the same type
-					if reflect.TypeOf(num1) != reflect.TypeOf(num2) {
-						return 0, fmt.Errorf("divide cannot use different types (%s & %s) - convert them first", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+					if reflect.TypeOf(dividend) != reflect.TypeOf(divisor) {
+						return 0, fmt.Errorf("divide cannot use different types (%s & %s) - convert them first", reflect.TypeOf(dividend).Name(), reflect.TypeOf(divisor).Name())
 					}
 					//Then do all the conversions & additions (now we know both types are the same)
-					switch n2 := num2.(type) {
+					switch n2 := divisor.(type) {
 					case int:
 						return n1.(int) / n2, nil
 					case int8:
@@ -183,7 +207,7 @@ func registerNumberBuiltins() {
 						return n1.(float64) / n2, nil
 					}
 				}
-				return 0, fmt.Errorf("divide can only divide numeric types, not %s and %s", reflect.TypeOf(num1).Name(), reflect.TypeOf(num2).Name())
+				return 0, fmt.Errorf("divide can only divide numeric types, not %s and %s", reflect.TypeOf(dividend).Name(), reflect.TypeOf(divisor).Name())
 			},
 		),
 	)
@@ -191,7 +215,13 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"pow",
-			`pow returns x to the power of y (x**y).`,
+			FunctionDocumentation{
+				Text: `pow returns x to the power of y (x**y).`,
+				Parameters: map[string]string{
+					"x": "The base number.",
+					"y": "The exponent (number of times x is multiplied by itself).",
+				},
+			},
 			math.Pow,
 		),
 	)
@@ -199,7 +229,13 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"mod",
-			`mod returns the remainder of x/y.`,
+			FunctionDocumentation{
+				Text: `mod returns the remainder of dividend divided by divisor.`,
+				Parameters: map[string]string{
+					"dividend": "The number to be divided.",
+					"divisor":  "The number to divide by.",
+				},
+			},
 			math.Mod,
 		),
 	)
@@ -207,7 +243,9 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"int",
-			`int converts the passed in value to an int or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `int converts the passed in value to an int or returns a error if conversion isn't possible`,
+			},
 			func(number interface{}) (int, error) {
 				switch num := number.(type) {
 				case int:
@@ -243,7 +281,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"int8",
-			`int8 converts the passed in value to an int8 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `int8 converts the passed in value to an int8 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (int8, error) {
 				switch num := number.(type) {
 				case int:
@@ -279,7 +322,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"int16",
-			`int16 converts the passed in value to an int16 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `int16 converts the passed in value to an int16 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (int16, error) {
 				switch num := number.(type) {
 				case int:
@@ -315,7 +363,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"int32",
-			`int32 converts the passed in value to an int32 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `int32 converts the passed in value to an int32 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (int32, error) {
 				switch num := number.(type) {
 				case int:
@@ -351,7 +404,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"int64",
-			`int converts the passed in value to an int or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `int64 converts the passed in value to an int64 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (int64, error) {
 				switch num := number.(type) {
 				case int:
@@ -387,7 +445,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"uint",
-			`uint converts the passed in value to a uint or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `uint converts the passed in value to an uint or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (uint, error) {
 				switch num := number.(type) {
 				case int:
@@ -423,7 +486,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"uint8",
-			`uint8 converts the passed in value to a uint8 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `uint8 converts the passed in value to an uint8 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (uint8, error) {
 				switch num := number.(type) {
 				case int:
@@ -459,7 +527,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"uint16",
-			`uint16 converts the passed in value to a uint16 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `uint16 converts the passed in value to an uint16 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (uint16, error) {
 				switch num := number.(type) {
 				case int:
@@ -495,7 +568,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"uint32",
-			`uint32 converts the passed in value to a uint32 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `uint32 converts the passed in value to an uint32 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (uint32, error) {
 				switch num := number.(type) {
 				case int:
@@ -531,8 +609,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"uint64",
-			`uint64 converts the passed in value to a uint64 or returns a error if conversion isn't possible`,
-
+			FunctionDocumentation{
+				Text: `uint64 converts the passed in value to an uint64 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (uint64, error) {
 				switch num := number.(type) {
 				case int:
@@ -568,7 +650,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"float32",
-			`float converts the passed in value to a float32 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `float32 converts the passed in value to an float32 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (float32, error) {
 				switch num := number.(type) {
 				case int:
@@ -604,7 +691,12 @@ func registerNumberBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"float64",
-			`float64 converts the passed in value to a float64 or returns a error if conversion isn't possible`,
+			FunctionDocumentation{
+				Text: `float64 converts the passed in value to an float64 or returns a error if conversion isn't possible`,
+				Parameters: map[string]string{
+					"number": "The number to convert.",
+				},
+			},
 			func(number interface{}) (float64, error) {
 				switch num := number.(type) {
 				case int:

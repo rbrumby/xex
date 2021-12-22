@@ -9,7 +9,13 @@ func registerCoreBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"equals",
-			`compares 2 inputs returning a bool`,
+			FunctionDocumentation{
+				Text: `compares 2 inputs returning a bool`,
+				Parameters: map[string]string{
+					"val1": "The first value to compare",
+					"val2": "The second value to compare",
+				},
+			},
 			func(val1, val2 interface{}) bool {
 				return val1 == val2
 			},
@@ -19,11 +25,16 @@ func registerCoreBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"switch",
-			`Switches on the first value.
-			The following values are equivalent to "case : result" pairs.
-			If a final value is provided (an even number of arguments is passed in total), the final value is used as the default.
-			If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned. And so on.
-			If there is no default and no values matched, switch returns nil.`,
+			FunctionDocumentation{
+				Text: `Switches on the first value.
+				The following values are equivalent to "case : result" pairs.
+				If a final value is provided (an even number of arguments is passed in total), the final value is used as the default.
+				If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned. And so on.
+				If there is no default and no values matched, switch returns nil.`,
+				Parameters: map[string]string{
+					"values": "variadic - the value to test then alternate if/else pairs and finally an optional else value",
+				},
+			},
 			func(values ...interface{}) interface{} {
 				var dflt interface{}
 				if math.Mod(float64(len(values)), 2) == 0 {
@@ -44,7 +55,12 @@ func registerCoreBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"not",
-			`Accepts a boolean & returns its inverse`,
+			FunctionDocumentation{
+				Text: `Accepts a boolean & returns its inverse`,
+				Parameters: map[string]string{
+					"value": "The value to invert.",
+				},
+			},
 			func(value bool) bool {
 				return !value
 			},
@@ -54,7 +70,12 @@ func registerCoreBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"nil",
-			`Returns what is passed - used to implement parenthesis grouping`,
+			FunctionDocumentation{
+				Text: `Returns what is passed - used to implement parenthesis grouping`,
+				Parameters: map[string]string{
+					"value": "The value which will be returned as this function does nothing!",
+				},
+			},
 			func(value interface{}) interface{} {
 				return value
 			},
@@ -64,7 +85,13 @@ func registerCoreBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"add_or_Concat",
-			`Chooses to call add or concat depending on args`,
+			FunctionDocumentation{
+				Text: `Chooses to call add or concat depending if args are numeric or not.`,
+				Parameters: map[string]string{
+					"val1": "The first value to add / concat.",
+					"val2": "The second value to add / concat.",
+				},
+			},
 			func(val1 interface{}, val2 interface{}) (interface{}, error) {
 				switch val1.(type) {
 				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:

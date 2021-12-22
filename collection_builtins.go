@@ -9,8 +9,13 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"slice",
-			`Makes a new slice containing the passed in values. The type of slice created is determined by the type passed in the first element of values.
-			slice can be used to create a list of values to test against - is myproperty x, y or z?: select(slice("x", "y", "z"), .myproperty) > 0`,
+			FunctionDocumentation{
+				Text: `Makes a new slice containing the passed in values. The type of slice created is determined by the type passed in the first element of values.
+				slice can be used to create a list of values to test against - is myproperty x, y or z?: select(slice("x", "y", "z"), .myproperty) > 0`,
+				Parameters: map[string]string{
+					"values": "variadic - any number of values can be passed to be built into a slice. Types must be compatible with the first value passed.",
+				},
+			},
 			func(values ...interface{}) (out interface{}, err error) {
 				logger.Tracef("creating slice of type %s", reflect.TypeOf(values[0]))
 				defer func() {
@@ -32,8 +37,13 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"map",
-			`Makes a new map containing the passed in mapEntry values.
-			The type of the map (key / value) created is determined by the types passed in the first element of values.`,
+			FunctionDocumentation{
+				Text: `Makes a new map containing the passed in mapEntry values.
+				The type of the map (key / value) created is determined by the types passed in the first element of values.`,
+				Parameters: map[string]string{
+					"values": "variadic - any number of MapEntry's can be passed to be built into a Map. Types must be compatible with the first value passed.",
+				},
+			},
 			func(values ...MapEntry) (out interface{}, err error) {
 				logger.Tracef("creating map of type %s:%s", reflect.TypeOf(values[0].key), reflect.TypeOf(values[0].value))
 				defer func() {
@@ -56,17 +66,21 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"select",
-			`Returns the elements in the passed in collection (slice / array or map) for which expression evaluates to true.
-			 If an array is passed in, it is returned as a slice.
-	         If coll refers to a map, expression is evaluated on the map value, not the key.
-			 coll is the collection to select from.
-			 forEach is the name by which we will refer to each entry in coll.
-			 expr is the expression to apply to using collName to reference values in coll. MUST return a bool (true or false).
-			 refs is an optional list values which can be referenced as $0, $1, etc within the expression.
-			 Example:
-			 //BookList is a collection. For each "book" in the list, we want to evaluate the equals Expression.
-			 //We also pass enother evaluated value SelectedAuthor which will be accessible as $0 in our expression.
-			 select(root.BookList, "book", "equals(book.Author, $0)", root.SelectedAuthor)`,
+			FunctionDocumentation{
+				Text: `Returns the elements in the passed in collection (slice / array or map) for which expression evaluates to true.
+				If an array is passed in, it is returned as a slice.
+				If coll refers to a map, expression is evaluated on the map value, not the key.
+				Example:
+				//BookList is a collection. For each "book" in the list, we want to evaluate the equals Expression.
+				//We also pass enother evaluated value SelectedAuthor which will be accessible as $0 in our expression.
+				select(root.BookList, "book", "equals(book.Author, $0)", root.SelectedAuthor)`,
+				Parameters: map[string]string{
+					"coll":    "The collection (array, slice or map) to select from.",
+					"forEach": "The name by which we will refer to each entry in coll",
+					"expr":    "The expression to apply using to each value in coll. MUST return a bool (true or false).",
+					"refs":    "An optional list values which can be referenced as $0, $1, etc within the expression.",
+				},
+			},
 			func(coll interface{}, forEach string, expr *Expression, refs ...interface{}) (interface{}, error) {
 				values := make(Values)
 				//Use the indices of refs to create a map of $n values
@@ -119,10 +133,13 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"index_of",
-			`Returns the entry from the passed collection at the requested index.
-			 - coll must be map, array or slice
-			 - index is the index / key to extract from coll
-			`,
+			FunctionDocumentation{
+				Text: `Returns the entry from the passed collection at the requested index.`,
+				Parameters: map[string]string{
+					"coll":  "The collection (array, slice or map) from which to extract a value.",
+					"index": "The index / key to extract from coll",
+				},
+			},
 			func(coll interface{}, index interface{}) (interface{}, error) {
 				switch reflect.TypeOf(coll).Kind() {
 				case reflect.Array, reflect.Slice:
@@ -142,7 +159,12 @@ func registerCollectionBuiltins() {
 	RegisterFunction(
 		NewFunction(
 			"count",
-			`Returns the number of elements in the passed in slice / array or map.`,
+			FunctionDocumentation{
+				Text: `Returns the number of elements in the passed in slice / array or map.`,
+				Parameters: map[string]string{
+					"in": "The number of elements in the collection.",
+				},
+			},
 			func(in interface{}) (int, error) {
 				switch reflect.TypeOf(in).Kind() {
 				case reflect.Array, reflect.Slice, reflect.Map:

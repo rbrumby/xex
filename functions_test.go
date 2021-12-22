@@ -7,14 +7,14 @@ import (
 
 func TestHappyPathRegisterGetAndExec(t *testing.T) {
 	RegisterFunction(
-		NewFunction("test", "just a test", testFunc),
+		NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFunc),
 	)
 	f, err := GetFunction("test")
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-	if f.Name() != "test" || f.Documentation() != "just a test" {
+	if f.Name() != "test" || f.DocumentationString() != "just a test" {
 		t.Fatal("Function didn't contain expected values")
 	}
 	values, err := f.Exec("XXX")
@@ -29,7 +29,7 @@ func TestHappyPathRegisterGetAndExec(t *testing.T) {
 
 func TestHappyPathRegisterGetAndExecNoError(t *testing.T) {
 	RegisterFunction(
-		NewFunction("testnoerr", "just another test", testFuncNoError),
+		NewFunction("testnoerr", FunctionDocumentation{Text: "just another test"}, testFuncNoError),
 	)
 	f, err := GetFunction("testnoerr")
 	if err != nil {
@@ -62,7 +62,7 @@ func (e myCustomError) Error() string {
 }
 
 func TestCustomErrorTypeFunction(t *testing.T) {
-	fn := NewFunction("fail", "always returns an error", func() (string, myCustomError) {
+	fn := NewFunction("fail", FunctionDocumentation{Text: "always returns an error"}, func() (string, myCustomError) {
 		return "nothing", myCustomError{msg: "It always fails"}
 	})
 	_, err := fn.Exec()
@@ -73,41 +73,41 @@ func TestCustomErrorTypeFunction(t *testing.T) {
 
 func TestUnnamedFunction(t *testing.T) {
 	defer assertPanic(t)
-	_ = NewFunction("", "just a test", testFunc)
+	_ = NewFunction("", FunctionDocumentation{Text: "just a test"}, testFunc)
 }
 
 func TestInvalidFunctionName(t *testing.T) {
 	defer assertPanic(t)
-	_ = NewFunction("xy1_2+x", "just a test", testFunc)
+	_ = NewFunction("xy1_2+x", FunctionDocumentation{Text: "just a test"}, testFunc)
 }
 
 func TestInvalidFuncNameregex(t *testing.T) {
 	defer assertPanic(t)
-	fn := NewFunction("valid", "just a test", testFunc)
+	fn := NewFunction("valid", FunctionDocumentation{Text: "just a test"}, testFunc)
 	fn.name = "in-valid"
 	fn.validate("regexpisinvalid(")
 }
 
 func TestDuplicateFunction(t *testing.T) {
 	defer assertPanic(t)
-	RegisterFunction(NewFunction("duplicate", "just a test", testFunc))
-	RegisterFunction(NewFunction("duplicate", "just a test", testFunc))
+	RegisterFunction(NewFunction("duplicate", FunctionDocumentation{Text: "just a test"}, testFunc))
+	RegisterFunction(NewFunction("duplicate", FunctionDocumentation{Text: "just a test"}, testFunc))
 }
 
 func TestNilFunctionImplementation(t *testing.T) {
 	defer assertPanic(t)
-	_ = NewFunction("test", "just a test", nil)
+	_ = NewFunction("test", FunctionDocumentation{Text: "just a test"}, nil)
 }
 
 func TestRegisterInternallyBrokenFunction(t *testing.T) {
 	defer assertPanic(t)
-	f := NewFunction("test", "just a test", testFuncNoError)
+	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFuncNoError)
 	f.name = ""
 	RegisterFunction(f)
 }
 
 func TestCallInternallyBrokenFunction(t *testing.T) {
-	f := NewFunction("test", "just a test", testFuncNoError)
+	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFuncNoError)
 	f.name = ""
 	_, err := f.Exec()
 	if err == nil {
@@ -117,7 +117,7 @@ func TestCallInternallyBrokenFunction(t *testing.T) {
 }
 
 func TestIncorrectArgs(t *testing.T) {
-	f := NewFunction("test", "just a test", testFunc)
+	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFunc)
 	_, err := f.Exec(5)
 	if err == nil {
 		t.Fatal("Should have failed using int as string")
