@@ -6,21 +6,23 @@ import (
 	"strconv"
 )
 
-//TODO:
-// operator precedence (I don't think that will be easy!!)
-// unary functions (! = not?)
-// additional binary functions > >= <= <
-// explicit conversion is still required in the expression
+var unaryFuncMap map[string]string = map[string]string{
+	"!": "not",
+}
 
 var binaryFuncMap map[string]string = map[string]string{
-	"+":  "add_or_concat",
+	"+":  "addOrConcat",
 	"-":  "subtract",
 	"*":  "multiply",
 	"/":  "divide",
 	"^":  "pow",
 	"%":  "mod",
 	"==": "equals",
-	//TODO: Greater than, etc
+	"!=": "notEqual",         //TODO
+	">":  "greaterThan",      //TODO
+	">=": "greaterThanEqual", //TODO
+	"<":  "lessThan",         //TODO
+	"<=": "lessThanEqual",    //TODO
 }
 
 type Parser interface {

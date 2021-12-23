@@ -25,7 +25,6 @@ const (
 	TOKEN_RRESULT
 	TOKEN_BINARY_OPERATOR
 	TOKEN_UNARY_OPERATOR
-	TOKEN_COMPARATOR
 	TOKEN_STRING
 	TOKEN_INT
 	TOKEN_FLOAT
@@ -48,7 +47,6 @@ var tokenTypes = []string{
 	TOKEN_RRESULT:         "RIGHT_RESULT",
 	TOKEN_BINARY_OPERATOR: "BINARY_OPERATOR",
 	TOKEN_UNARY_OPERATOR:  "UNARY_OPERATOR",
-	TOKEN_COMPARATOR:      "COMPARATOR",
 	TOKEN_STRING:          "STRING",
 	TOKEN_INT:             "INTEGER",
 	TOKEN_FLOAT:           "FLOAT",
@@ -133,6 +131,10 @@ func (l *DefaultLexer) peek() (r rune) {
 
 func (l *DefaultLexer) consume(validFn func(r rune) bool) bool {
 	r := l.next()
+	if validFn == nil {
+		l.buff = append(l.buff, r)
+		return true
+	}
 	if validFn(r) {
 		l.buff = append(l.buff, r)
 		return true
@@ -192,54 +194,51 @@ func lexNextToken(l *DefaultLexer) stateFn {
 		l.emit(TOKEN_IDENT)
 		return lexNextToken
 	case r == '.':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_SEPARATOR)
 		return lexNextToken
 	case r == ',':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_DELIMITER)
 		return lexNextToken
 	case r == '(':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_LPAREN)
 		return lexNextToken
 	case r == ')':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_RPAREN)
 		return lexNextToken
 	case r == '[':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_LINDEX)
 		return lexNextToken
 	case r == ']':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_RINDEX)
 		return lexNextToken
 	case r == '{':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_LRESULT)
 		return lexNextToken
 	case r == '}':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_RRESULT)
 		return lexNextToken
 	case r == '#':
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		l.emit(TOKEN_ALL_VALUES)
 		return lexNextToken
-	case isBinaryOperator(r): //operators are single runes so we can do a single consume
-		l.consume(isBinaryOperator)
-		l.emit(TOKEN_BINARY_OPERATOR)
-		return lexNextToken
-	case isComparator(r): //We know we have a conflict with "!" used as both a logical not & also !=
-		l.consume(isComparator) //consime the value we already peeked (r)
-		r2 := l.peek()          //peek at the next one
-		if isUnaryOperator(r) && !isComparator(r2) {
-			l.consume(isUnaryOperator)
-			l.emit(TOKEN_UNARY_OPERATOR)
+	case isOperator(r):
+		if r == '!' {
+			l.consume(nil)
+			r = l.peek()
+			if r != '=' {
+				l.emit(TOKEN_UNARY_OPERATOR)
+			}
 		} else {
-			l.consume(isComparator)
-			l.emit(TOKEN_COMPARATOR)
+			l.consumeUntilInvalid(isOperator)
+			l.emit(TOKEN_BINARY_OPERATOR)
 		}
 		return lexNextToken
 	case isQuote(r):
@@ -258,7 +257,7 @@ func lexNumber(l *DefaultLexer) stateFn {
 	}
 	if l.peek() == '.' {
 		//consume the '.' and treat as a float
-		l.consume(func(r rune) bool { return true })
+		l.consume(nil)
 		return lexFloat
 	}
 	l.emit(TOKEN_INT)
@@ -286,18 +285,8 @@ func lexStringLiteral(l *DefaultLexer) stateFn {
 func isIdentChar(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r)
 }
-func isBinaryOperator(r rune) bool {
-	//TODO: deal with ! (not) - the only unary operator
-	return strings.ContainsRune("+-/*%^&", r)
-}
-
-func isUnaryOperator(r rune) bool {
-	//TODO: deal with ! (not) - the only unary operator
-	return strings.ContainsRune("!", r)
-}
-
-func isComparator(r rune) bool {
-	return strings.ContainsRune("!=<>", r)
+func isOperator(r rune) bool {
+	return strings.ContainsRune("+-/*%^<>=!", r)
 }
 
 func isQuote(r rune) bool {

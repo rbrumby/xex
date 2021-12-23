@@ -84,7 +84,7 @@ func registerCoreBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
-			"add_or_Concat",
+			"addOrConcat",
 			FunctionDocumentation{
 				Text: `Chooses to call add or concat depending if args are numeric or not.`,
 				Parameters: map[string]string{
