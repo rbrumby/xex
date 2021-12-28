@@ -365,7 +365,7 @@ func TestBadMap(t *testing.T) {
 
 func TestIndexOfSlice(t *testing.T) {
 	s := []string{"zero", "one", "two", "three"}
-	f, err := GetFunction("index_of")
+	f, err := GetFunction("indexOf")
 	if err != nil {
 		t.Error(err)
 	}
@@ -380,7 +380,7 @@ func TestIndexOfSlice(t *testing.T) {
 
 func TestIndexOfMap(t *testing.T) {
 	s := map[int]string{0: "zero", 1: "one", 2: "two", 3: "three"}
-	f, err := GetFunction("index_of")
+	f, err := GetFunction("indexOf")
 	if err != nil {
 		t.Error(err)
 	}

@@ -7,8 +7,8 @@ import (
 )
 
 func TestIdentAndInt(t *testing.T) {
-	//                                                         1         2         3         4         5         6
-	//                                               0123456789012345678901234567890123456789012345678901234567890123456789
+	//                                                                1         2         3         4         5         6         7         8
+	//                                                      012345678901234567890123456789012345678901234567890123456789012345678901234567890
 	l := NewDefaultLexer(bufio.NewReader(strings.NewReader(`123 4.5 hello_WORLD.FuncName  + - * / % ^ == < != "a string" "" ()[]., false/true`)))
 	expected := []*Token{
 		{TOKEN_INT, 0, "123"},

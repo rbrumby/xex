@@ -132,7 +132,7 @@ func registerCollectionBuiltins() {
 
 	RegisterFunction(
 		NewFunction(
-			"index_of",
+			"indexOf",
 			FunctionDocumentation{
 				Text: `Returns the entry from the passed collection at the requested index.`,
 				Parameters: map[string]string{
