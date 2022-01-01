@@ -7,23 +7,25 @@ import (
 
 func TestHappyPathRegisterGetAndExec(t *testing.T) {
 	RegisterFunction(
-		NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFunc),
+		NewFunction("test", FunctionDocumentation{Text: "just a test", Parameters: map[string]string{"test1": "param1"}}, testFunc),
 	)
 	f, err := GetFunction("test")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
-	if f.Name() != "test" || f.DocumentationString() != "just a test" {
-		t.Fatal("Function didn't contain expected values")
+	if f.Name() != "test" || f.DocumentationString() != "just a test\ntest1: param1" {
+		t.Errorf("unexpected function documentation: %s - %s", f.Name(), f.DocumentationString())
+		return
 	}
 	values, err := f.Exec("XXX")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
 	if values[0] != "Hello world!" {
-		t.Fatalf("Expected \"Hello world!\", got %q", values[0])
+		t.Errorf("Expected \"Hello world!\", got %q", values[0])
+		return
 	}
 }
 
@@ -33,23 +35,25 @@ func TestHappyPathRegisterGetAndExecNoError(t *testing.T) {
 	)
 	f, err := GetFunction("testnoerr")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
 	values, err := f.Exec()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
 	if values[0] != "Hello world!" {
-		t.Fatalf("Expected \"Helloworld!\", got %q", values[0])
+		t.Errorf("Expected \"Helloworld!\", got %q", values[0])
+		return
 	}
 }
 
 func TestGetNonExistentFunction(t *testing.T) {
 	_, err := GetFunction("xxx")
 	if err == nil {
-		t.Fatal("should have got error sayign function does not exist")
+		t.Error("should have got error sayign function does not exist")
+		return
 	}
 }
 
@@ -67,7 +71,8 @@ func TestCustomErrorTypeFunction(t *testing.T) {
 	})
 	_, err := fn.Exec()
 	if err == nil || err.Error() != "It always fails" {
-		t.Fatalf("Didn't get expected error. Got %q", err.Error())
+		t.Errorf("Didn't get expected error. Got %q", err.Error())
+		return
 	}
 }
 
@@ -111,7 +116,7 @@ func TestCallInternallyBrokenFunction(t *testing.T) {
 	f.name = ""
 	_, err := f.Exec()
 	if err == nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
 }
@@ -120,12 +125,12 @@ func TestIncorrectArgs(t *testing.T) {
 	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFunc)
 	_, err := f.Exec(5)
 	if err == nil {
-		t.Fatal("Should have failed using int as string")
+		t.Error("Should have failed using int as string")
 		return
 	}
 	_, err = f.Exec("x", "y")
 	if err == nil {
-		t.Fatal("Should have failed with too many input arguments")
+		t.Error("Should have failed with too many input arguments")
 		return
 	}
 
@@ -134,7 +139,7 @@ func TestIncorrectArgs(t *testing.T) {
 func assertPanic(t *testing.T) {
 	err := recover()
 	if err == nil {
-		t.Fatal("Should have panicked")
+		t.Error("Should have panicked")
 	}
 
 }

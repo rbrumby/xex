@@ -22,9 +22,11 @@ func TestLiteral(t *testing.T) {
 	l := NewLiteral("testing123")
 	e := NewExpression(l)
 	if e, err := e.Evaluate(nil); err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	} else if e != "testing123" {
-		t.Fatalf("literal Eval() returned %v", e)
+		t.Errorf("literal Eval() returned %v", e)
+		return
 	}
 }
 
@@ -47,10 +49,12 @@ func TestProperty(t *testing.T) {
 
 	result, err := e.Evaluate(Values{"root": x})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	if result != "somethingelse" {
-		t.Fatalf("Expect \"somethingelse\". Got %q", result)
+		t.Errorf("Expect \"somethingelse\". Got %q", result)
+		return
 	}
 }
 
@@ -106,13 +110,16 @@ func TestMethodCall(t *testing.T) {
 
 	res, err := exp.Evaluate(Values{"car": c})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	if reflect.TypeOf(res).Kind() != reflect.Int {
-		t.Fatal("RPM's are not an int")
+		t.Error("RPM's are not an int")
+		return
 	}
 	if res != 1125 {
-		t.Fatalf("Expected 1125, got %d", res)
+		t.Errorf("Expected 1125, got %d", res)
+		return
 	}
 }
 
@@ -127,14 +134,16 @@ func TestNonExistentMethodCall(t *testing.T) {
 	mc := NewMethodCall("not_exists", nil, nil, 0)
 	_, err := mc.Evaluate(Values{"car": c})
 	if err == nil {
-		t.Fatal("expected cannot call method on inl object")
+		t.Error("expected cannot call method on inl object")
+		return
 	}
 
 	e := NewProperty("Engine", NewProperty("car", nil))
 	mc2 := NewMethodCall("not_exists", e, nil, 0)
 	_, err = mc2.Evaluate(Values{"car": c})
 	if err == nil {
-		t.Fatal("expected method not_exists doesn't exist error")
+		t.Error("expected method not_exists doesn't exist error")
+		return
 	}
 }
 
@@ -155,17 +164,20 @@ func TestFunctionCalls(t *testing.T) {
 
 	fnMultiply, err := GetFunction("multiply")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 
 	fnInt, err := GetFunction("int")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 
 	fnDivide, err := GetFunction("divide")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	fnDivideCall := NewFunctionCall(
 		fnDivide,
@@ -191,11 +203,13 @@ func TestFunctionCalls(t *testing.T) {
 
 	result, err := fnDivideCall.Evaluate(Values{"car": c})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 
 	if result != 1125 {
-		t.Fatalf("Expected 1125, got %d", result)
+		t.Errorf("Expected 1125, got %d", result)
+		return
 	}
 
 }
@@ -221,11 +235,13 @@ func TestPropertyOfMethodCall(t *testing.T) {
 
 	gear, err := gearNode.Evaluate(Values{"car": c})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 
 	if gear != uint8(4) {
-		t.Fatalf("Expected gear 4, got %d", gear)
+		t.Errorf("Expected gear 4, got %d", gear)
+		return
 	}
 }
 
@@ -245,10 +261,12 @@ func TestPropertiesWithPointers(t *testing.T) {
 
 	res, err := ex.Evaluate(Values{"car": c})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	if res.(string) != "Stig" {
-		t.Fatalf("Expected Stig, got %s", res)
+		t.Errorf("Expected Stig, got %s", res)
+		return
 	}
 }
 
@@ -268,9 +286,11 @@ func TestEnvAsPointer(t *testing.T) {
 
 	res, err := ex.Evaluate(Values{"car": &c})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	if res.(string) != "Stig" {
-		t.Fatalf("Expected Stig, got %s", res)
+		t.Errorf("Expected Stig, got %s", res)
+		return
 	}
 }

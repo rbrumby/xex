@@ -3,6 +3,7 @@ package xex
 import (
 	"fmt"
 	"math"
+	"reflect"
 )
 
 func registerCoreBuiltins() {
@@ -126,26 +127,25 @@ func registerCoreBuiltins() {
 					"val2": "The second value.",
 				},
 			},
-			func(val1, val2 interface{}) (bool, error) {
+			func(val1, val2 interface{}) (res bool, err error) {
 				if v1, ok := val1.(string); ok {
 					if v2, ok := val2.(string); ok {
 						return v1 > v2, nil
 					}
 				}
-
-				f64, err := GetFunction("float64")
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
+				if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
+					return false, fmt.Errorf("greaterThan: mismatched types %s and %s", reflect.TypeOf(val1), reflect.TypeOf(val2))
 				}
-				v1, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				v2, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				return v1[0].(float64) > v2[0].(float64), nil
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("greaterThan: error converting values to float64: %s", recv)
+						res = false
+					}
+				}()
+				v1 := reflect.ValueOf(val1).Convert(reflect.TypeOf(float64(0)))
+				v2 := reflect.ValueOf(val2).Convert(reflect.TypeOf(float64(0)))
+				return v1.Float() > v2.Float(), nil
 			},
 		),
 	)
@@ -160,26 +160,25 @@ func registerCoreBuiltins() {
 					"val2": "The second value.",
 				},
 			},
-			func(val1, val2 interface{}) (bool, error) {
+			func(val1, val2 interface{}) (res bool, err error) {
 				if v1, ok := val1.(string); ok {
 					if v2, ok := val2.(string); ok {
 						return v1 >= v2, nil
 					}
 				}
-
-				f64, err := GetFunction("float64")
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
+				if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
+					return false, fmt.Errorf("greaterThanEqual: mismatched types %s and %s", reflect.TypeOf(val1), reflect.TypeOf(val2))
 				}
-				v1, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				v2, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				return v1[0].(float64) >= v2[0].(float64), nil
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("greaterThanEqual: error converting values to float64: %s", recv)
+						res = false
+					}
+				}()
+				v1 := reflect.ValueOf(val1).Convert(reflect.TypeOf(float64(0)))
+				v2 := reflect.ValueOf(val2).Convert(reflect.TypeOf(float64(0)))
+				return v1.Float() >= v2.Float(), nil
 			},
 		),
 	)
@@ -194,26 +193,25 @@ func registerCoreBuiltins() {
 					"val2": "The second value.",
 				},
 			},
-			func(val1, val2 interface{}) (bool, error) {
+			func(val1, val2 interface{}) (res bool, err error) {
 				if v1, ok := val1.(string); ok {
 					if v2, ok := val2.(string); ok {
 						return v1 < v2, nil
 					}
 				}
-
-				f64, err := GetFunction("float64")
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
+				if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
+					return false, fmt.Errorf("lessThan: mismatched types %s and %s", reflect.TypeOf(val1), reflect.TypeOf(val2))
 				}
-				v1, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				v2, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				return v1[0].(float64) < v2[0].(float64), nil
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("lessThan: error converting values to float64: %s", recv)
+						res = false
+					}
+				}()
+				v1 := reflect.ValueOf(val1).Convert(reflect.TypeOf(float64(0)))
+				v2 := reflect.ValueOf(val2).Convert(reflect.TypeOf(float64(0)))
+				return v1.Float() < v2.Float(), nil
 			},
 		),
 	)
@@ -228,26 +226,25 @@ func registerCoreBuiltins() {
 					"val2": "The second value.",
 				},
 			},
-			func(val1, val2 interface{}) (bool, error) {
+			func(val1, val2 interface{}) (res bool, err error) {
 				if v1, ok := val1.(string); ok {
 					if v2, ok := val2.(string); ok {
 						return v1 <= v2, nil
 					}
 				}
-
-				f64, err := GetFunction("float64")
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
+				if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
+					return false, fmt.Errorf("lessThanEqual: mismatched types %s and %s", reflect.TypeOf(val1), reflect.TypeOf(val2))
 				}
-				v1, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				v2, err := f64.Exec(val1)
-				if err != nil {
-					return false, fmt.Errorf("greaterThan: %s", err)
-				}
-				return v1[0].(float64) <= v2[0].(float64), nil
+				defer func() {
+					recv := recover()
+					if recv != nil {
+						err = fmt.Errorf("lessThanEqual: error converting values to float64: %s", recv)
+						res = false
+					}
+				}()
+				v1 := reflect.ValueOf(val1).Convert(reflect.TypeOf(float64(0)))
+				v2 := reflect.ValueOf(val2).Convert(reflect.TypeOf(float64(0)))
+				return v1.Float() <= v2.Float(), nil
 			},
 		),
 	)

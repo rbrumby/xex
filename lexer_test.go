@@ -57,7 +57,7 @@ func TestIdentAndInt(t *testing.T) {
 	for _, exp := range expected {
 		tok := l.NextToken()
 		if *exp != *tok {
-			t.Fatalf("Expected %s. Got %s", exp, tok)
+			t.Errorf("Expected %s. Got %s", exp, tok)
 		}
 		if exp.Typ == TOKEN_EOF {
 			break
