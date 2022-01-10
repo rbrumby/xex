@@ -83,8 +83,14 @@ func (p *DefaultParser) parse(parent Node) (node Node, err error) {
 	if this.Typ == TOKEN_EOF {
 		return nil, nil
 	}
+
+	if this.Typ == TOKEN_ERROR {
+		return nil, fmt.Errorf("invalid token reported by lexer: %s", this)
+	}
+
 	next := p.peek(0)
 	switch {
+
 	case this.Typ == TOKEN_IDENT && next.Typ == TOKEN_LPAREN: //This is a call (method or function - not Foo Fighters)
 		logger.Debugf("Func or method, %v followed by %v\n", this, next)
 		call, err := p.parseCall(parent, this)
@@ -109,7 +115,7 @@ func (p *DefaultParser) parse(parent Node) (node Node, err error) {
 	case this.Typ == TOKEN_UNARY_OPERATOR:
 		unFnName, ok := unaryFuncMap[this.Value]
 		if !ok {
-			return nil, fmt.Errorf("unary function %s not found", this.Value)
+			return nil, fmt.Errorf("unary function %q not found", this.Value)
 		}
 		unFn, err := GetFunction(unFnName)
 		if err != nil {
@@ -144,11 +150,12 @@ func (p *DefaultParser) parse(parent Node) (node Node, err error) {
 
 	case this.Typ == TOKEN_INT:
 		logger.Debugf("Int literal, %v \n", this)
-		val, err := strconv.ParseInt(this.Value, 0, 64)
+		val, err := strconv.ParseInt(this.Value, 0, 0) //use default int bitsize
+		v := int(val)
 		if err != nil {
 			return nil, err
 		}
-		return p.functionalize(NewLiteral(val))
+		return p.functionalize(NewLiteral(v))
 
 	case this.Typ == TOKEN_FLOAT:
 		logger.Debugf("Float literal, %v \n", this)
@@ -177,7 +184,7 @@ func (p *DefaultParser) parseCall(parent Node, ident *Token) (node Node, err err
 	logger.Debugf("Collecting args for %s\n", ident.Value)
 	for { //build args for the method or function call
 		next := p.peek(0)
-		if next.Typ == TOKEN_RPAREN {
+		if next.Typ == TOKEN_RPAREN { //this check needed in case there are no args - we check again below after finding an arg
 			rp := p.next() //consume the rparen
 			logger.Debugf("Found %s, skipped & consumed it\n", rp)
 			break
@@ -277,7 +284,7 @@ func (p *DefaultParser) parseReturnIndex() (index int, err error) {
 	if idxlit, ok := idx.(*Literal); ok {
 		rres := p.next() //consume rresrult
 		if rres.Typ != TOKEN_RRESULT {
-			return 0, fmt.Errorf("unexpected token %s, expected %s", rres, TOKEN_RINDEX)
+			return 0, fmt.Errorf("unexpected token %s, expected %s", rres, TOKEN_RRESULT)
 		}
 		logger.Debugf("Found %s, skipped & consumed it\n", rres)
 		switch idxint := idxlit.value.(type) {
@@ -319,5 +326,11 @@ func (p *DefaultParser) parseCollectionIndex(in Node) (out Node, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("parseCollectionIndex: %s", err)
 	}
-	return NewFunctionCall(indFn, []Node{index}, 0), nil
+	//TODO: Need to call parse with this as parent if next token is a "."
+	if p.peek(0).Typ == TOKEN_SEPARATOR {
+		sep := p.next() //consume separator
+		logger.Debugf("Found %s, skipped & consumed it\n", sep)
+		return p.parse(NewFunctionCall(indFn, []Node{in, index}, 0))
+	}
+	return NewFunctionCall(indFn, []Node{in, index}, 0), nil
 }

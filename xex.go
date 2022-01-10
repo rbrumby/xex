@@ -3,6 +3,7 @@ package xex
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/coreos/capnslog"
 )
@@ -80,18 +81,22 @@ func (fc *FunctionCall) Arg(arg Node) {
 func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 	args := make([]interface{}, len(fc.arguments))
 	for i, argNode := range fc.arguments {
-		if reflect.TypeOf(fc.function.impl).NumIn() > i &&
-			reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
-			reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
-			//Arg is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
-			args[i] = argNode
-			continue
+		if argNode == nil {
+			args[i] = nil
+		} else {
+			if reflect.TypeOf(fc.function.impl).NumIn() > i &&
+				reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
+				reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
+				//Arg is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
+				args[i] = argNode
+				continue
+			}
+			arg, err := argNode.Evaluate(values)
+			if err != nil {
+				return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
+			}
+			args[i] = arg
 		}
-		arg, err := argNode.Evaluate(values)
-		if err != nil {
-			return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
-		}
-		args[i] = arg
 	}
 	results, err := fc.function.Exec(args...)
 	if err != nil {
@@ -104,7 +109,11 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 }
 
 func (f *FunctionCall) String() string {
-	return fmt.Sprintf("FunctionCall: %s(%s)", f.function.name, f.arguments)
+	argNames := make([]string, 0)
+	for _, arg := range f.arguments {
+		argNames = append(argNames, arg.String())
+	}
+	return fmt.Sprintf("FunctionCall: %s(%s)", f.function.name, strings.Join(argNames, ","))
 }
 
 //Literal is a Node in the compiled expression tree which represents a literal value.
@@ -156,7 +165,11 @@ func (mc *MethodCall) Arg(arg Node) {
 }
 
 func (m *MethodCall) String() string {
-	return fmt.Sprintf("MethodCall: %s(%s)", m.name, m.arguments)
+	argNames := make([]string, 0)
+	for _, arg := range m.arguments {
+		argNames = append(argNames, arg.String())
+	}
+	return fmt.Sprintf("MethodCall: %s(%s)", m.name, strings.Join(argNames, ","))
 }
 
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.

@@ -89,8 +89,8 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 	//for example arguments do not match the function implementation
 	defer func() {
 		if recv := recover(); recv != nil {
-			logger.Errorf("recovering from call to %q with args %v: %s", f.Name(), args, recv)
-			err = fmt.Errorf("error executing %q: %v", f.Name(), recv)
+			logger.Debugf("recovering from call to %q with args %v: %s", f.Name(), args, recv)
+			err = fmt.Errorf("error executing %q with args %v: %v", f.Name(), args, recv)
 		}
 	}()
 

@@ -65,6 +65,7 @@ type Token struct {
 	Typ   TokenType
 	Start int
 	Value string
+	Error error
 }
 
 func (t *Token) String() string {
@@ -151,13 +152,15 @@ func (l *DefaultLexer) consumeUntilInvalid(validFn func(r rune) bool) {
 //emit clears the current buffer &
 func (l *DefaultLexer) emit(tType TokenType) {
 	val := string(l.buff)
+	var err error = nil
 	if tType == TOKEN_ERROR {
-		val = fmt.Sprintf("error reading expression: %s", l.err.Error())
+		err = fmt.Errorf("error reading expression: %s", l.err.Error())
 	}
 	token := &Token{
 		Typ:   tType,
 		Start: l.start,
 		Value: val,
+		Error: err,
 	}
 	l.buff = l.buff[:0]
 	l.start = l.pos
@@ -247,6 +250,7 @@ func lexNextToken(l *DefaultLexer) stateFn {
 		return lexNumber
 	default:
 		l.err = fmt.Errorf("unrecognized character %q at position %d", r, l.pos)
+		l.consume(nil)
 		l.emit(TOKEN_ERROR)
 	}
 	return nil

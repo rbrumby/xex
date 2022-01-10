@@ -149,9 +149,14 @@ func registerCollectionBuiltins() {
 					}
 					return reflect.ValueOf(coll).Index(idx).Interface(), nil
 				case reflect.Map:
-					return reflect.ValueOf(coll).MapIndex(reflect.ValueOf(index)).Interface(), nil
+					logger.Debugf("indexOf: Accessing map with %s %v", reflect.TypeOf(index), index)
+					entry := reflect.ValueOf(coll).MapIndex(reflect.ValueOf(index))
+					if !entry.IsValid() {
+						return nil, fmt.Errorf("indexOf could not find map entry with key %v of type %s", index, reflect.ValueOf(index))
+					}
+					return entry.Interface(), nil
 				}
-				return nil, fmt.Errorf("index_of: epected array/slice, not %s", reflect.TypeOf(coll).Kind())
+				return nil, fmt.Errorf("index_of: expected array/slice, not %s", reflect.TypeOf(coll).Kind())
 			},
 		),
 	)

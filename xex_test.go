@@ -1,8 +1,6 @@
 package xex
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 )
 
@@ -58,89 +56,37 @@ func TestProperty(t *testing.T) {
 	}
 }
 
-type Car struct {
-	Engine Engine
-	Driver *Driver
-}
-
-func (c Car) GetGearBox() Gearbox {
-	return c.Engine.Gearbox
-}
-
-func (c Car) String() string {
-	return fmt.Sprintf("Car driven by %s (%d) is in gear %d", c.Driver.Name, c.Driver.Age, c.Engine.Gearbox.Gear)
-}
-
-type Driver struct {
-	Name string
-	Age  int
-}
-
-type Engine struct {
-	Gearbox Gearbox
-}
-
-type Gearbox struct {
-	Gear  uint8
-	Gears []Gear
-}
-
-type Gear struct {
-	Ratio float32
-}
-
-func (e *Engine) GetRPM(mph int) (rpm int) {
-	return mph * 150 / int(e.Gearbox.Gear)
-}
-
 func TestMethodCall(t *testing.T) {
-	c := Car{
-		Engine: Engine{
-			Gearbox: Gearbox{
-				Gear: 4,
-			},
-		},
-	}
 
-	root := NewProperty("car", nil)
-	eProp := NewProperty("Engine", root)
-	mphArg := NewLiteral(30)
-	rpm := NewMethodCall("GetRPM", eProp, []Node{mphArg}, 0)
-	exp := NewExpression(rpm)
+	lib := NewProperty("lib", nil)
+	add := NewMethodCall("GetAddress", lib, nil, 0)
+	exp := NewExpression(add)
 
-	res, err := exp.Evaluate(Values{"car": c})
+	res, err := exp.Evaluate(Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if reflect.TypeOf(res).Kind() != reflect.Int {
-		t.Error("RPM's are not an int")
+	r, ok := res.(Address)
+	if !ok {
+		t.Errorf("Expected address, got %v", r)
 		return
 	}
-	if res != 1125 {
-		t.Errorf("Expected 1125, got %d", res)
-		return
+	if r.City != "London" {
+		t.Errorf("Expected city London, got %s", r.City)
 	}
 }
 
 func TestNonExistentMethodCall(t *testing.T) {
-	c := Car{
-		Engine: Engine{
-			Gearbox: Gearbox{
-				Gear: 4,
-			},
-		},
-	}
 	mc := NewMethodCall("not_exists", nil, nil, 0)
-	_, err := mc.Evaluate(Values{"car": c})
+	_, err := mc.Evaluate(Values{"lib": testLib})
 	if err == nil {
-		t.Error("expected cannot call method on inl object")
+		t.Error("expected cannot call method on nil object")
 		return
 	}
-
-	e := NewProperty("Engine", NewProperty("car", nil))
-	mc2 := NewMethodCall("not_exists", e, nil, 0)
-	_, err = mc2.Evaluate(Values{"car": c})
+	lib := NewProperty("lib", nil)
+	mc2 := NewMethodCall("not_exists", lib, nil, 0)
+	_, err = mc2.Evaluate(Values{"lib": testLib})
 	if err == nil {
 		t.Error("expected method not_exists doesn't exist error")
 		return
@@ -148,32 +94,16 @@ func TestNonExistentMethodCall(t *testing.T) {
 }
 
 func TestFunctionCalls(t *testing.T) {
-	c := Car{
-		Engine: Engine{
-			Gearbox: Gearbox{
-				Gear: 4,
-			},
-		},
-		Driver: &Driver{Name: "Stig"},
-	}
-
-	root := NewProperty("car", nil)
-	eProp := NewProperty("Engine", root)
-	gbProp := NewProperty("Gearbox", eProp)
-	gProp := NewProperty("Gear", gbProp)
-
 	fnMultiply, err := GetFunction("multiply")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
 	fnInt, err := GetFunction("int")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
 	fnDivide, err := GetFunction("divide")
 	if err != nil {
 		t.Error(err)
@@ -193,104 +123,65 @@ func TestFunctionCalls(t *testing.T) {
 			NewFunctionCall(
 				fnInt,
 				[]Node{
-					gProp,
+					NewLiteral(4.76543), //int function will round down
 				},
 				0,
 			),
 		},
 		0,
 	)
-
-	result, err := fnDivideCall.Evaluate(Values{"car": c})
+	result, err := fnDivideCall.Evaluate(Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
 	if result != 1125 {
 		t.Errorf("Expected 1125, got %d", result)
 		return
 	}
-
 }
 
 func TestPropertyOfMethodCall(t *testing.T) {
-	c := Car{
-		Engine: Engine{
-			Gearbox: Gearbox{
-				Gear: 4,
-			},
-		},
-	}
-
-	gearNode := NewProperty(
-		"Gear",
+	cityEx := NewProperty(
+		"City",
 		NewMethodCall(
-			"GetGearBox",
-			NewProperty("car", nil), //parent
-			nil,                     //no args
-			0,
+			"GetAddress",
+			NewProperty("lib", nil), //top level object
+			nil,                     //no args to GetAddress
+			0,                       //use 1st return value
 		),
 	)
 
-	gear, err := gearNode.Evaluate(Values{"car": c})
+	city, err := cityEx.Evaluate(Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if gear != uint8(4) {
-		t.Errorf("Expected gear 4, got %d", gear)
+	if city != "London" {
+		t.Errorf("Expected London, got %s", city)
 		return
 	}
 }
 
-func TestPropertiesWithPointers(t *testing.T) {
-	name := "Stig"
-	c := Car{
-		Driver: &Driver{
-			Name: name,
-			Age:  999,
-		},
-	}
+func TestPropertyOnPointer(t *testing.T) {
 
-	d := NewProperty("Driver", NewProperty("car", nil))
-	n := NewProperty("Name", d)
+	book := NewMethodCall("Book", NewProperty("lib", nil), []Node{NewLiteral("1984")}, 0)
+	price := NewProperty("Price", book)
 
-	ex := NewExpression(n)
+	ex := NewExpression(price)
 
-	res, err := ex.Evaluate(Values{"car": c})
+	res, err := ex.Evaluate(Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if res.(string) != "Stig" {
-		t.Errorf("Expected Stig, got %s", res)
+	if p, ok := res.(float32); ok {
+		if p != 9.99 {
+			t.Errorf("Expected 9.99, got %v", res)
+			return
+		}
 		return
 	}
-}
-
-func TestEnvAsPointer(t *testing.T) {
-	name := "Stig"
-	c := Car{
-		Driver: &Driver{
-			Name: name,
-			Age:  999,
-		},
-	}
-
-	d := NewProperty("Driver", NewProperty("car", nil))
-	n := NewProperty("Name", d)
-
-	ex := NewExpression(n)
-
-	res, err := ex.Evaluate(Values{"car": &c})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if res.(string) != "Stig" {
-		t.Errorf("Expected Stig, got %s", res)
-		return
-	}
+	t.Error("Could not convert price to float32")
 }

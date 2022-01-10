@@ -445,4 +445,13 @@ func TestIndexOfMap(t *testing.T) {
 		t.Errorf("Expected two, got %s", res[0])
 		return
 	}
+	res, err = f.Exec(s, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if res[0] != "zero" {
+		t.Errorf("Expected zero, got %s", res[0])
+		return
+	}
 }

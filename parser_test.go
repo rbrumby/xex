@@ -2,6 +2,7 @@ package xex
 
 import (
 	"bufio"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -16,68 +17,6 @@ func TestEmptyExpression(t *testing.T) {
 	_, err := par.Parse()
 	if err.Error() != "empty expression" {
 		t.Error(err)
-		return
-	}
-}
-func TestFuncMethProp(t *testing.T) {
-	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
-		`add(
-			float64(
-				multiply( car.GetGearBox(){0}.Gear, uint8(99) )
-			),
-			3.5)`,
-	)))
-	par := DefaultParser{
-		lexer: lex,
-	}
-	ex, err := par.Parse()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	c := Car{
-		Engine: Engine{
-			Gearbox{
-				Gear:  2,
-				Gears: []Gear{{1.8}, {3.4}, {6.2}, {11.9}},
-			},
-		},
-	}
-	res, err := ex.Evaluate(Values{"car": c})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if res != 201.5 {
-		t.Errorf("Expected 201.5, got %f", res)
-		return
-	}
-}
-
-func TestVariadicConcat(t *testing.T) {
-	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
-		`concat("123","-","456","-","789",": ", car.Driver.Name){0}`,
-	)))
-	par := DefaultParser{
-		lexer: lex,
-	}
-	ex, err := par.Parse()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	c := Car{
-		Driver: &Driver{Name: "Lando"},
-	}
-	res, err := ex.Evaluate(Values{"car": c})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if res != "123-456-789: Lando" {
-		t.Errorf(`Expected "123-456-789: Lando", got %s`, res)
 		return
 	}
 }
@@ -126,8 +65,26 @@ func TestPeekNext(t *testing.T) {
 	}
 }
 
-func TestFunctionalize(t *testing.T) {
-	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(`string((4 + 10) * 3) + "_hello"`)))
+func TestSimpleProperties(t *testing.T) {
+	p := DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.Address.City`))),
+	}
+	ex, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+	r, err := ex.Evaluate(Values{"lib": testLib})
+	if err != nil {
+		t.Error(err)
+	}
+	if r != "London" {
+		t.Errorf("Expected London. Got %d", r)
+		return
+	}
+}
+
+func TestBinaryOperators(t *testing.T) {
+	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(`string(add(4.5, 10.5){0} * float64(3)) + "_hello"`)))
 	par := DefaultParser{
 		lexer: lex,
 	}
@@ -141,8 +98,99 @@ func TestFunctionalize(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if answer != "42_hello" {
-		t.Errorf("Expected 42_hello. Got %d", answer)
+	if answer != "45_hello" {
+		t.Errorf("Expected 45_hello. Got %d", answer)
+		return
+	}
+}
+
+func TestUnaryOperator(t *testing.T) {
+	p := DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
+	}
+	ex, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	r, err := ex.Evaluate(nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if r != false {
+		t.Errorf("Expected false, got %v", r)
+		return
+	}
+	//Bad arg
+	p = DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!~`))),
+	}
+	_, err = p.Parse()
+	if err == nil {
+		t.Error("Expected error for unary operator with bad arg")
+		return
+	}
+	//delete the function
+	delete(functions, "not")
+	p = DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
+	}
+	_, err = p.Parse()
+	if err == nil {
+		t.Error("Expected function does not exist error")
+		return
+	}
+	//delete from unaryFuncMap
+	delete(unaryFuncMap, "!")
+	p = DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
+	}
+	_, err = p.Parse()
+	if err == nil {
+		t.Error("Expected error for missing unary function map")
+		return
+	}
+}
+
+func TestIndexOfMapFromMethod(t *testing.T) {
+	p := DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.Authors()[2]`))),
+	}
+	ex, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(ex)
+	r, err := ex.Evaluate(Values{"lib": testLib})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if r != "George Orwell" {
+		t.Errorf("Expected George Orwell, got %v", r)
+		return
+	}
+}
+
+func TestIndexOfSliceFromMethod(t *testing.T) {
+	p := DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.GetBooks()[2].Title`))),
+	}
+	ex, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(ex)
+	r, err := ex.Evaluate(Values{"lib": testLib})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if r != "1984" {
+		t.Errorf("Expected 1984, got %v", r)
 		return
 	}
 }
