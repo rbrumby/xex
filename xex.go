@@ -88,18 +88,13 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 			args[i] = nil
 		} else {
 			if reflect.TypeOf(fc.function.impl).NumIn() > i &&
-				reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
-				reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
-				//This arg in the function is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
-				//But if the value passed is a a different type of Node, wrap it in a *Expression.
-				if ex, ok := argNode.(*Expression); ok {
+				reflect.TypeOf(fc.function.impl).In(i).Implements(reflect.TypeOf((*Node)(nil)).Elem()) {
+				//This arg shouldn't be evaluated - the function expects a Node
+				if ex, ok := argNode.(Node); ok {
 					args[i] = ex
-				} else if no, ok := argNode.(Node); ok {
-					args[i] = NewExpression(no)
-				} else {
-					return nil, fmt.Errorf("function %q expects an expression for arg %d. Got a %q", fc.Name(), i, reflect.TypeOf(argNode).Name())
+					continue
 				}
-				continue
+				return nil, fmt.Errorf("%q expected argument %d to be a xex.Node", fc.Name(), i)
 			}
 			arg, err := argNode.Evaluate(values)
 			if err != nil {

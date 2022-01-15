@@ -77,11 +77,11 @@ func registerCollectionBuiltins() {
 				Parameters: map[string]string{
 					"coll":    "The collection (array, slice or map) to select from.",
 					"forEach": "The name by which we will refer to each entry in coll",
-					"expr":    "The expression to apply using to each value in coll. MUST return a bool (true or false).",
+					"expr":    "An expression (Node) to apply using to each value in coll. MUST return a bool (true or false).",
 					"refs":    "An optional list values () which can be referenced as $0, $1, etc within the expression.",
 				},
 			},
-			func(coll interface{}, forEach string, expr *Expression, refs ...interface{}) (interface{}, error) {
+			func(coll interface{}, forEach string, expr Node, refs ...interface{}) (interface{}, error) {
 				values := make(Values)
 				//Use the indices of refs to create a map of $n values
 				for refIdx, ref := range refs {
