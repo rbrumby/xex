@@ -78,7 +78,7 @@ func registerCollectionBuiltins() {
 					"coll":    "The collection (array, slice or map) to select from.",
 					"forEach": "The name by which we will refer to each entry in coll",
 					"expr":    "The expression to apply using to each value in coll. MUST return a bool (true or false).",
-					"refs":    "An optional list values which can be referenced as $0, $1, etc within the expression.",
+					"refs":    "An optional list values () which can be referenced as $0, $1, etc within the expression.",
 				},
 			},
 			func(coll interface{}, forEach string, expr *Expression, refs ...interface{}) (interface{}, error) {

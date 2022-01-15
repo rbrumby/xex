@@ -29,16 +29,11 @@ var binaryFuncMap map[string]string = map[string]string{
 
 type Parser interface {
 	Parse() (node *Expression, err error)
-	Lexer(l Lexer)
 }
 
 type DefaultParser struct {
 	lexer Lexer
 	buff  []*Token
-}
-
-func (p *DefaultParser) Lexer(l Lexer) {
-	p.lexer = l
 }
 
 //next gets & consumes the next non-whitepace *Token either from the buffer or the lexer
@@ -85,7 +80,7 @@ func (p *DefaultParser) parse(parent Node) (node Node, err error) {
 	}
 
 	if this.Typ == TOKEN_ERROR {
-		return nil, fmt.Errorf("invalid token reported by lexer: %s", this)
+		return nil, fmt.Errorf("Lexer found invalid token: %s", this)
 	}
 
 	next := p.peek(0)

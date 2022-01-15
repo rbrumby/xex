@@ -9,38 +9,40 @@ import (
 )
 
 var logger = capnslog.NewPackageLogger("github.com/rbrumby/xex", "xex")
-var Repolog capnslog.RepoLogger
 
-func init() {
-	Repolog = capnslog.MustRepoLogger("github.com/rbrumby/xex")
-}
-
-//Node is a node in the compiled expression tree.
+//Node is a node in the compiled expression tree
 type Node interface {
 	Name() string
 	Evaluate(values Values) (interface{}, error)
 	String() string
 }
 
+//Call represents something that can be called (a function or method)
 type Call interface {
 	Node
 	Arg(arg Node)
 }
 
+//Values is a map which an Expression is evaluated against
 type Values map[string]interface{}
 
+//Expression will be evaluated to return a value.
+//It is the root of the graph of Nodes used to produce a value but can also be
 type Expression struct {
 	root Node
 }
 
+//NewExpression creates an expression
 func NewExpression(root Node) *Expression {
 	return &Expression{root}
 }
 
+//Name always returns "<expression>" - expressions don't have names.
 func (e *Expression) Name() string {
 	return "<expression>"
 }
 
+//Evaluate evaluates the expression
 func (e *Expression) Evaluate(values Values) (interface{}, error) {
 	if values == nil {
 		values = make(Values)
@@ -48,6 +50,7 @@ func (e *Expression) Evaluate(values Values) (interface{}, error) {
 	return e.root.Evaluate(values)
 }
 
+//String returns a string representation of the expression
 func (e *Expression) String() string {
 	return fmt.Sprintf("Expression:\n%s\n", e.root)
 }
@@ -87,8 +90,15 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 			if reflect.TypeOf(fc.function.impl).NumIn() > i &&
 				reflect.TypeOf(fc.function.impl).In(i).Kind() == reflect.Ptr &&
 				reflect.TypeOf(fc.function.impl).In(i) == reflect.ValueOf(&Expression{}).Type() {
-				//Arg is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
-				args[i] = argNode
+				//This arg in the function is a pointer to an expression. Don't evaluate it, pass the expression to the function for it to evaluate.
+				//But if the value passed is a a different type of Node, wrap it in a *Expression.
+				if ex, ok := argNode.(*Expression); ok {
+					args[i] = ex
+				} else if no, ok := argNode.(Node); ok {
+					args[i] = NewExpression(no)
+				} else {
+					return nil, fmt.Errorf("function %q expects an expression for arg %d. Got a %q", fc.Name(), i, reflect.TypeOf(argNode).Name())
+				}
 				continue
 			}
 			arg, err := argNode.Evaluate(values)
@@ -103,7 +113,7 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 		return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
 	}
 	if len(results) <= fc.Index() {
-		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indexex start at zero)", fc.Index(), fc.Name(), len(results))
+		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indices start at zero)", fc.Index(), fc.Name(), len(results))
 	}
 	return results[fc.Index()], nil
 }
@@ -218,7 +228,7 @@ func (mc *MethodCall) Evaluate(values Values) (result interface{}, err error) {
 		err = errchk
 	}
 	if len(results) <= mc.Index() {
-		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indexex start at zero)", mc.Index(), mc.Name(), len(results))
+		return nil, fmt.Errorf("index %d out of range. Function %s returned %d values (indices start at zero)", mc.Index(), mc.Name(), len(results))
 	}
 	result = results[mc.Index()].Interface()
 	return
@@ -277,5 +287,11 @@ func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
 }
 
 func (p *Property) String() string {
-	return fmt.Sprintf("Property: %s", p.name)
+	out := strings.Builder{}
+	out.WriteString(fmt.Sprintf("Property: %s\n", p.name))
+	if p.parent != nil {
+		out.WriteString(fmt.Sprintf("Parent: %s\n", p.parent))
+	}
+	return out.String()
+
 }

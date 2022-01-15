@@ -66,131 +66,141 @@ func TestPeekNext(t *testing.T) {
 }
 
 func TestSimpleProperties(t *testing.T) {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.Address.City`))),
-	}
-	ex, err := p.Parse()
+	err := testDoParse(`lib.Address.City`, "London", Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
-	}
-	r, err := ex.Evaluate(Values{"lib": testLib})
-	if err != nil {
-		t.Error(err)
-	}
-	if r != "London" {
-		t.Errorf("Expected London. Got %d", r)
 		return
 	}
 }
 
 func TestBinaryOperators(t *testing.T) {
-	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(`string(add(4.5, 10.5){0} * float64(3)) + "_hello"`)))
-	par := DefaultParser{
-		lexer: lex,
-	}
-	ex, err := par.Parse()
+	err := testDoParse(`string(add(4.5, 10.5){0} * float64(3)) + "_hello"`, "45_hello", Values{})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	answer, err := ex.Evaluate(Values{})
+}
+
+func TestMathsWithParentheses(t *testing.T) {
+	err := testDoParse(`4 + 3 * 2`, 10, Values{})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if answer != "45_hello" {
-		t.Errorf("Expected 45_hello. Got %d", answer)
+	err = testDoParse(`(4 + 3) * 2`, 14, Values{})
+	if err != nil {
+		t.Error(err)
 		return
 	}
 }
 
 func TestUnaryOperator(t *testing.T) {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
-	}
-	ex, err := p.Parse()
+	err := testDoParse(`!true`, false, Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
-		return
-	}
-	r, err := ex.Evaluate(nil)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if r != false {
-		t.Errorf("Expected false, got %v", r)
 		return
 	}
 	//Bad arg
-	p = DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!~`))),
-	}
-	_, err = p.Parse()
+	err = testDoParse(`!~`, nil, Values{"lib": testLib})
 	if err == nil {
-		t.Error("Expected error for unary operator with bad arg")
+		t.Error("should have failed with bad arg for unary operator")
 		return
 	}
 	//delete the function
 	delete(functions, "not")
-	p = DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
-	}
-	_, err = p.Parse()
+	err = testDoParse(`!true`, nil, Values{"lib": testLib})
 	if err == nil {
-		t.Error("Expected function does not exist error")
+		t.Error("expected function does not exist error")
 		return
 	}
 	//delete from unaryFuncMap
 	delete(unaryFuncMap, "!")
-	p = DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`!true`))),
-	}
-	_, err = p.Parse()
+	err = testDoParse(`!true`, nil, Values{"lib": testLib})
 	if err == nil {
-		t.Error("Expected error for missing unary function map")
+		t.Error("expected error for missing unary function map")
 		return
 	}
 }
 
 func TestIndexOfMapFromMethod(t *testing.T) {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.Authors()[2]`))),
-	}
-	ex, err := p.Parse()
+	err := testDoParse(`lib.Authors()[2]`, "George Orwell", Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
-		return
-	}
-	fmt.Println(ex)
-	r, err := ex.Evaluate(Values{"lib": testLib})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if r != "George Orwell" {
-		t.Errorf("Expected George Orwell, got %v", r)
 		return
 	}
 }
 
 func TestIndexOfSliceFromMethod(t *testing.T) {
+	err := testDoParse(`lib.GetBooks(){0}[2].Title`, "1984", Values{"lib": testLib})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestInvalidReturnIndex(t *testing.T) {
+	err := testDoParse(`lib.GetBooks(){999}[2].Title`, "1984", Values{"lib": testLib})
+	if err == nil {
+		t.Error("expected error for invalid return index")
+	}
+}
+
+func TestSelectAndIterate(t *testing.T) {
 	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.GetBooks()[2].Title`))),
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`select(lib.GetBooks(), "book", book.PublicationYear > 1900)`))),
 	}
 	ex, err := p.Parse()
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	fmt.Println(ex)
-	r, err := ex.Evaluate(Values{"lib": testLib})
+	results, err := ex.Evaluate(Values{"lib": testLib})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if r != "1984" {
-		t.Errorf("Expected 1984, got %v", r)
+	list, ok := results.([]*Book)
+	if !ok {
+		t.Error("did not get a slice of Book")
+	}
+	chk := map[string]bool{"1984": false, "Animal Farm": false, "The Lion, the With & the Wardrobe": false}
+	cnt := 0
+	for _, res := range list {
+		chk[res.Title] = true
+		cnt++
+	}
+	if cnt != 3 {
+		t.Errorf("expected 3 results. Got %d", cnt)
 		return
 	}
+	for book, found := range chk {
+		if found != true {
+			t.Errorf("did not find %q", book)
+		}
+	}
+}
+
+func TestSelectAndCall(t *testing.T) {
+	err := testDoParse(`select(lib.GetBooks(), "book", book.PublicationYear > 1900)[1].Title`, "Animal Farm", Values{"lib": testLib})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func testDoParse(expression string, expect interface{}, values Values) error {
+	p := DefaultParser{
+		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(expression))),
+	}
+	ex, err := p.Parse()
+	if err != nil {
+		return err
+	}
+	r, err := ex.Evaluate(values)
+	if err != nil {
+		return err
+	}
+	if r != expect {
+		return fmt.Errorf("expected %v, got %v", expect, r)
+	}
+	return nil
 }

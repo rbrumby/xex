@@ -140,5 +140,5 @@ func GetFunction(name string) (*Function, error) {
 	if f, ok := functions[name]; ok {
 		return f, nil
 	}
-	return &Function{}, fmt.Errorf("function %s does not exist", name)
+	return &Function{}, fmt.Errorf("function %q does not exist", name)
 }
