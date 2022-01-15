@@ -86,22 +86,22 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 	for i, argNode := range fc.arguments {
 		if argNode == nil {
 			args[i] = nil
-		} else {
-			if reflect.TypeOf(fc.function.impl).NumIn() > i &&
-				reflect.TypeOf(fc.function.impl).In(i).Implements(reflect.TypeOf((*Node)(nil)).Elem()) {
-				//This arg shouldn't be evaluated - the function expects a Node
-				if ex, ok := argNode.(Node); ok {
-					args[i] = ex
-					continue
-				}
-				return nil, fmt.Errorf("%q expected argument %d to be a xex.Node", fc.Name(), i)
-			}
-			arg, err := argNode.Evaluate(values)
-			if err != nil {
-				return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
-			}
-			args[i] = arg
+			continue
 		}
+		if reflect.TypeOf(fc.function.impl).NumIn() > i &&
+			reflect.TypeOf(fc.function.impl).In(i).Implements(reflect.TypeOf((*Node)(nil)).Elem()) {
+			//This arg shouldn't be evaluated - the function expects a Node
+			if ex, ok := argNode.(Node); ok {
+				args[i] = ex
+				continue
+			}
+			return nil, fmt.Errorf("%q expected argument %d to be a xex.Node", fc.Name(), i)
+		}
+		arg, err := argNode.Evaluate(values)
+		if err != nil {
+			return nil, fmt.Errorf("function %q: %s", fc.Name(), err)
+		}
+		args[i] = arg
 	}
 	results, err := fc.function.Exec(args...)
 	if err != nil {
