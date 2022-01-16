@@ -45,20 +45,36 @@ func registerCollectionBuiltins() {
 				},
 			},
 			func(values ...MapEntry) (out interface{}, err error) {
-				logger.Tracef("creating map of type %s:%s", reflect.TypeOf(values[0].key), reflect.TypeOf(values[0].value))
+				logger.Tracef("creating map of type %s:%s", reflect.TypeOf(values[0].Key), reflect.TypeOf(values[0].Value))
 				defer func() {
 					recv := recover()
 					if recv != nil {
 						err = fmt.Errorf("error creating map: %s", recv)
 					}
 				}()
-				mtyp := reflect.MapOf(reflect.TypeOf(values[0].key), reflect.TypeOf(values[0].value))
+				mtyp := reflect.MapOf(reflect.TypeOf(values[0].Key), reflect.TypeOf(values[0].Value))
 				mout := reflect.MakeMap(mtyp)
 				for _, e := range values {
-					mout.SetMapIndex(reflect.ValueOf(e.key), reflect.ValueOf(e.value))
+					mout.SetMapIndex(reflect.ValueOf(e.Key), reflect.ValueOf(e.Value))
 				}
 				logger.Tracef("Created %s of %s: %v", mout.Kind(), mout.Type().Elem(), mout.Interface())
 				return mout.Interface(), nil
+			},
+		),
+	)
+
+	RegisterFunction(
+		NewFunction(
+			"entry",
+			FunctionDocumentation{
+				Text: `Creates a map entry with the passed in key & value.`,
+				Parameters: map[string]string{
+					"key":   "The map entry key.",
+					"value": "The map entry value.",
+				},
+			},
+			func(key interface{}, value interface{}) (entry MapEntry) {
+				return MapEntry{key, value}
 			},
 		),
 	)
@@ -182,8 +198,8 @@ func registerCollectionBuiltins() {
 }
 
 type MapEntry struct {
-	key   interface{}
-	value interface{}
+	Key   interface{}
+	Value interface{}
 }
 
 //ValuesNode is a Node which returns the Values object being processed.

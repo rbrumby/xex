@@ -115,6 +115,7 @@ func TestSelectMap(t *testing.T) {
 	m["0"] = Object{"Zero"}
 	m["1"] = Object{"One"}
 	m["2"] = Object{"Two"}
+
 	fc := NewFunctionCall(
 		sel,
 		[]Node{
@@ -366,7 +367,16 @@ func TestMap(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	res, err := s.Exec(MapEntry{"One", 1}, MapEntry{"Two", 2}, MapEntry{"Three", 3})
+	m, err := GetFunction("entry")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	one, _ := m.Exec("One", 1)
+	two, _ := m.Exec("Two", 2)
+	three, _ := m.Exec("Three", 3)
+
+	res, err := s.Exec(one[0], two[0], three[0])
 	if err != nil {
 		t.Error(err)
 		return

@@ -65,29 +65,16 @@ func TestPeekNext(t *testing.T) {
 	}
 }
 
-func TestSimpleProperties(t *testing.T) {
-	err := testDoParse(`lib.Address.City`, "London", Values{"lib": testLib})
+func TestParseEquation(t *testing.T) {
+	err := justParseAndCheckString("(4 + 3.5) * 2", "Expression: multiply(nil(addOrConcat(4,3.5)),2)")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 }
 
-func TestBinaryOperators(t *testing.T) {
-	err := testDoParse(`string(add(4.5, 10.5){0} * float64(3)) + "_hello"`, "45_hello", Values{})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-}
-
-func TestMathsWithParentheses(t *testing.T) {
-	err := testDoParse(`4 + 3 * 2`, 10, Values{})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	err = testDoParse(`(4 + 3) * 2`, 14, Values{})
+func TestParseFunction(t *testing.T) {
+	err := justParseAndCheckString(`concat("a","b")`, `Expression: concat("a","b")`)
 	if err != nil {
 		t.Error(err)
 		return
@@ -95,112 +82,137 @@ func TestMathsWithParentheses(t *testing.T) {
 }
 
 func TestUnaryOperator(t *testing.T) {
-	err := testDoParse(`!true`, false, Values{"lib": testLib})
+	err := justParseAndCheckString(`!true`, `Expression: not(true)`)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	//Bad arg
-	err = testDoParse(`!~`, nil, Values{"lib": testLib})
+	err = justParseAndCheckString(`!~`, "")
 	if err == nil {
 		t.Error("should have failed with bad arg for unary operator")
 		return
 	}
 	//delete the function
 	delete(functions, "not")
-	err = testDoParse(`!true`, nil, Values{"lib": testLib})
+	err = justParseAndCheckString(`!true`, "")
 	if err == nil {
 		t.Error("expected function does not exist error")
 		return
 	}
 	//delete from unaryFuncMap
 	delete(unaryFuncMap, "!")
-	err = testDoParse(`!true`, nil, Values{"lib": testLib})
+	err = justParseAndCheckString(`!true`, "")
 	if err == nil {
 		t.Error("expected error for missing unary function map")
 		return
 	}
 }
 
-func TestIndexOfMapFromMethod(t *testing.T) {
-	err := testDoParse(`lib.Authors()[2]`, "George Orwell", Values{"lib": testLib})
+func TestParseSubProp(t *testing.T) {
+	err := justParseAndCheckString(`person.Address`, `Expression: person.Address`)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 }
 
-func TestIndexOfSliceFromMethod(t *testing.T) {
-	err := testDoParse(`lib.GetBooks(){0}[2].Title`, "1984", Values{"lib": testLib})
+func TestParseFuncNoArgs(t *testing.T) {
+	err := justParseAndCheckString(`nil()`, `Expression: nil()`)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 }
 
-func TestInvalidReturnIndex(t *testing.T) {
-	err := testDoParse(`lib.GetBooks(){999}[2].Title`, "1984", Values{"lib": testLib})
-	if err == nil {
-		t.Error("expected error for invalid return index")
-	}
-}
-
-func TestSelectAndIterate(t *testing.T) {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`select(lib.GetBooks(), "book", book.PublicationYear > 1900)`))),
-	}
-	ex, err := p.Parse()
+func TestParseFunctionWithReturnIndex(t *testing.T) {
+	err := justParseAndCheckString(`concat("a","b"){55}`, `Expression: concat("a","b")`)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	results, err := ex.Evaluate(Values{"lib": testLib})
+}
+
+func TestFunctionWithSubProp(t *testing.T) {
+	err := justParseAndCheckString(`concat("a","b").child`, `Expression: concat("a","b").child`)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	list, ok := results.([]*Book)
-	if !ok {
-		t.Error("did not get a slice of Book")
-	}
-	chk := map[string]bool{"1984": false, "Animal Farm": false, "The Lion, the With & the Wardrobe": false}
-	cnt := 0
-	for _, res := range list {
-		chk[res.Title] = true
-		cnt++
-	}
-	if cnt != 3 {
-		t.Errorf("expected 3 results. Got %d", cnt)
-		return
-	}
-	for book, found := range chk {
-		if found != true {
-			t.Errorf("did not find %q", book)
-		}
-	}
 }
 
-func TestSelectAndCall(t *testing.T) {
-	err := testDoParse(`select(lib.GetBooks(), "book", book.PublicationYear > 1900)[1].Title`, "Animal Farm", Values{"lib": testLib})
+func TestParseFunctionWithReturnIndexAndSubProp(t *testing.T) {
+	err := justParseAndCheckString(`concat("a","b"){55}.child`, `Expression: concat("a","b").child`)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 }
 
-func testDoParse(expression string, expect interface{}, values Values) error {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(expression))),
+func TestParseMethodNoArgs(t *testing.T) {
+	err := justParseAndCheckString(`something.Do()`, `Expression: something.Do()`)
+	if err != nil {
+		t.Error(err)
+		return
 	}
+}
+
+func TestParseMethodWithReturnIndex(t *testing.T) {
+	err := justParseAndCheckString(`something.Do("a","b"){55}`, `Expression: something.Do("a","b")`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestMethodWithSubProp(t *testing.T) {
+	err := justParseAndCheckString(`something.Do("a","b").child`, `Expression: something.Do("a","b").child`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestParseMethodWithReturnIndexAndSubProp(t *testing.T) {
+	err := justParseAndCheckString(`something.Do("a","b"){55}.child`, `Expression: something.Do("a","b").child`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestParseCollectionIndex(t *testing.T) {
+	err := justParseAndCheckString(`collection[5]`, `Expression: indexOf(collection,5)`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestParseBadCollectionIndex(t *testing.T) {
+	err := justParseAndCheckString(`collection[5 f]`, `Expression: indexOf(collection,5)`)
+	if err != nil && strings.HasPrefix(err.Error(), "unexpected token") {
+		return
+	}
+	t.Error("should have failed with unexpected token")
+}
+
+func TestParseCollectionIndexSubProp(t *testing.T) {
+	err := justParseAndCheckString(`collection[5].prop`, `Expression: indexOf(collection,5).prop`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func justParseAndCheckString(exStr string, expected string) error {
+	p := DefaultParser{lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(exStr)))}
 	ex, err := p.Parse()
 	if err != nil {
 		return err
 	}
-	r, err := ex.Evaluate(values)
-	if err != nil {
-		return err
-	}
-	if r != expect {
-		return fmt.Errorf("expected %v, got %v", expect, r)
+	if ex.String() != expected {
+		return fmt.Errorf("expected %q, Got %q", expected, ex.String())
 	}
 	return nil
 }

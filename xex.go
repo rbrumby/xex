@@ -52,7 +52,7 @@ func (e *Expression) Evaluate(values Values) (interface{}, error) {
 
 //String returns a string representation of the expression
 func (e *Expression) String() string {
-	return fmt.Sprintf("Expression:\n%s\n", e.root)
+	return fmt.Sprintf("Expression: %s", e.root.String())
 }
 
 //FunctionCall is a Node in the compiled expression tree which represents a call to a funtion with Nodes as its arguments.
@@ -114,11 +114,16 @@ func (fc *FunctionCall) Evaluate(values Values) (interface{}, error) {
 }
 
 func (f *FunctionCall) String() string {
-	argNames := make([]string, 0)
-	for _, arg := range f.arguments {
-		argNames = append(argNames, arg.String())
+	out := &strings.Builder{}
+	out.WriteString(fmt.Sprintf("%s(", f.Name()))
+	for i, arg := range f.arguments {
+		out.WriteString(arg.String())
+		if i < len(f.arguments)-1 {
+			out.WriteString(",")
+		}
 	}
-	return fmt.Sprintf("FunctionCall: %s(%s)", f.function.name, strings.Join(argNames, ","))
+	out.WriteString(")")
+	return out.String()
 }
 
 //Literal is a Node in the compiled expression tree which represents a literal value.
@@ -139,7 +144,13 @@ func (l *Literal) Evaluate(values Values) (interface{}, error) {
 }
 
 func (l *Literal) String() string {
-	return fmt.Sprintf("Literal: %s", l.value)
+	if s, ok := (l.value).(string); ok {
+		return fmt.Sprintf("%q", s)
+	}
+	if s, ok := (l.value).(fmt.Stringer); ok {
+		return fmt.Sprintf("%q", s)
+	}
+	return fmt.Sprintf("%v", l.value)
 }
 
 //MethodCall is a Node in the compiled expression tree which represents a call to a method on a parent object.
@@ -170,11 +181,21 @@ func (mc *MethodCall) Arg(arg Node) {
 }
 
 func (m *MethodCall) String() string {
-	argNames := make([]string, 0)
-	for _, arg := range m.arguments {
-		argNames = append(argNames, arg.String())
+	out := &strings.Builder{}
+	prefix := ""
+	if m.parent != nil {
+		out.WriteString(m.parent.String())
+		prefix = "."
 	}
-	return fmt.Sprintf("MethodCall: %s(%s)", m.name, strings.Join(argNames, ","))
+	out.WriteString(fmt.Sprintf("%s%s(", prefix, m.Name()))
+	for i, arg := range m.arguments {
+		out.WriteString(arg.String())
+		if i < len(m.arguments)-1 {
+			out.WriteString(",")
+		}
+	}
+	out.WriteString((")"))
+	return out.String()
 }
 
 //Evaluate calls the method on the MethodCalls parent or a pointer to the MethodCalls parent if the method isn't found on the parent itself.
@@ -282,11 +303,12 @@ func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
 }
 
 func (p *Property) String() string {
-	out := strings.Builder{}
-	out.WriteString(fmt.Sprintf("Property: %s\n", p.name))
+	out := &strings.Builder{}
+	prefix := ""
 	if p.parent != nil {
-		out.WriteString(fmt.Sprintf("Parent: %s\n", p.parent))
+		out.WriteString(p.parent.String())
+		prefix = "."
 	}
+	out.WriteString(fmt.Sprintf("%s%s", prefix, p.Name()))
 	return out.String()
-
 }

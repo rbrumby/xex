@@ -309,9 +309,6 @@ func (p *DefaultParser) parseCollectionIndex(in Node) (out Node, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("error parsing index: %s", err)
 	}
-	if p.peek(0).Typ != TOKEN_RINDEX {
-		return nil, fmt.Errorf("expeceted end of index. found %s", err)
-	}
 	rin := p.next() //consume rindex
 	if rin.Typ != TOKEN_RINDEX {
 		return nil, fmt.Errorf("unexpected token %s, expected %s", rin, TOKEN_RINDEX)
