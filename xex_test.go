@@ -1,25 +1,22 @@
 package xex
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/coreos/capnslog"
 )
 
 func TestMain(m *testing.M) {
-	lvl := os.Getenv("XEX_TEST_LOG_LEVEL")
-	if lvl == "" {
-		lvl = "CRITICAL"
-	}
-	var Repolog capnslog.RepoLogger
-	cfg, err := Repolog.ParseLogLevelConfig(fmt.Sprintf("xex=%s", lvl))
-	if err != nil {
-		panic(err)
-	}
-	Repolog.SetLogLevel(cfg)
 
+	l := capnslog.NewPackageLogger("github.com/rbrumby/xex", "xex")
+	// logLvl := DEBUG.String()
+	// repolog := capnslog.MustRepoLogger("github.com/rbrumby/xex")
+	// cfg, err := repolog.ParseLogLevelConfig(fmt.Sprintf("xex=%s", logLvl))
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// repolog.SetLogLevel(cfg)
+	SetLogger(l)
 	m.Run()
 }
 

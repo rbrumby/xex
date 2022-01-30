@@ -17,7 +17,7 @@ func registerCollectionBuiltins() {
 				},
 			},
 			func(values ...interface{}) (out interface{}, err error) {
-				logger.Tracef("creating slice of type %s", reflect.TypeOf(values[0]))
+				logger.Debugf("creating slice of type %s", reflect.TypeOf(values[0]))
 				defer func() {
 					recv := recover()
 					if recv != nil {
@@ -28,7 +28,7 @@ func registerCollectionBuiltins() {
 				for _, v := range values {
 					slice = reflect.Append(slice, reflect.ValueOf(v))
 				}
-				logger.Tracef("Created %s of %s: %v", slice.Kind(), slice.Type().Elem(), slice.Interface())
+				logger.Debugf("Created %s of %s: %v", slice.Kind(), slice.Type().Elem(), slice.Interface())
 				return slice.Interface(), nil
 			},
 		),
@@ -45,7 +45,7 @@ func registerCollectionBuiltins() {
 				},
 			},
 			func(values ...MapEntry) (out interface{}, err error) {
-				logger.Tracef("creating map of type %s:%s", reflect.TypeOf(values[0].Key), reflect.TypeOf(values[0].Value))
+				logger.Debugf("creating map of type %s:%s", reflect.TypeOf(values[0].Key), reflect.TypeOf(values[0].Value))
 				defer func() {
 					recv := recover()
 					if recv != nil {
@@ -57,7 +57,7 @@ func registerCollectionBuiltins() {
 				for _, e := range values {
 					mout.SetMapIndex(reflect.ValueOf(e.Key), reflect.ValueOf(e.Value))
 				}
-				logger.Tracef("Created %s of %s: %v", mout.Kind(), mout.Type().Elem(), mout.Interface())
+				logger.Debugf("Created %s of %s: %v", mout.Kind(), mout.Type().Elem(), mout.Interface())
 				return mout.Interface(), nil
 			},
 		),
@@ -123,7 +123,7 @@ func registerCollectionBuiltins() {
 						}
 					}
 				case reflect.Map:
-					logger.Tracef("selecting map: input is %s of %s", reflect.TypeOf(coll).Kind(), reflect.TypeOf(coll).Elem().Name())
+					logger.Debugf("selecting map: input is %s of %s", reflect.TypeOf(coll).Kind(), reflect.TypeOf(coll).Elem().Name())
 					out = reflect.MakeMap(reflect.MapOf(reflect.TypeOf(coll).Key(), reflect.TypeOf(coll).Elem()))
 					for _, k := range reflect.ValueOf(coll).MapKeys() {
 						values[forEach] = reflect.ValueOf(coll).MapIndex(k).Interface()
@@ -140,7 +140,7 @@ func registerCollectionBuiltins() {
 				default:
 					return 0, fmt.Errorf("cannot select from %q", reflect.TypeOf(coll).String())
 				}
-				logger.Tracef("select: response is a %q of %q", reflect.TypeOf(out.Interface()).Kind(), reflect.TypeOf(out.Interface()).Elem().Name())
+				logger.Debugf("select: response is a %q of %q", reflect.TypeOf(out.Interface()).Kind(), reflect.TypeOf(out.Interface()).Elem().Name())
 				return out.Interface(), nil
 			},
 		),

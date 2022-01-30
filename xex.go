@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/coreos/capnslog"
 )
-
-var logger = capnslog.NewPackageLogger("github.com/rbrumby/xex", "xex")
 
 //Node is a node in the compiled expression tree
 type Node interface {
