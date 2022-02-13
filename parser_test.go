@@ -2,6 +2,7 @@ package xex
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -215,4 +216,22 @@ func justParseAndCheckString(exStr string, expected string) error {
 		return fmt.Errorf("expected %q, Got %q", expected, ex.String())
 	}
 	return nil
+}
+
+type dummyParser struct{}
+
+func (dp *dummyParser) Parse() (node *Expression, err error) {
+	return nil, errors.New("not a real implementation")
+}
+
+func TestCustomParser(t *testing.T) {
+	_, err := NewStr(
+		"add(4,1)",
+		func(p Parser) Parser {
+			return &dummyParser{}
+		},
+	)
+	if err.Error() != "not a real implementation" {
+		t.Error("Expected dummyParser Parse() error")
+	}
 }

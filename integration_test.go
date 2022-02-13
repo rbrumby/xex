@@ -177,10 +177,7 @@ func TestPropertyOfFunctionReturnVal(t *testing.T) {
 }
 
 func testDoParse(expression string, expect interface{}, values Values) error {
-	p := DefaultParser{
-		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(expression))),
-	}
-	ex, err := p.Parse()
+	ex, err := NewStr(expression)
 	if err != nil {
 		return err
 	}

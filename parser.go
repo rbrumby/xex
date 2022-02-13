@@ -1,10 +1,35 @@
 package xex
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
+
+//ParserOoption is a function which can be passed to New (or NewStr) to modify default behaviour
+//(such as using different Parser or Lexer implementations & configuring them).
+//To replace the default parser, pass a function which returns a different Parser.
+//To replace the Lexer pass a function which modifies changes p.Lexer & returns p.
+type ParserOption func(p Parser) Parser
+
+//New creates an Expression from a *bufio.Readerby default using a DefaultParser & DefaultLexer.
+//ParserOption functions can be passed to change this behaviour.
+func New(r *bufio.Reader, opts ...ParserOption) (ex *Expression, err error) {
+	p := NewDefaultParser(NewDefaultLexer(r))
+	for _, opt := range opts {
+		p = opt(p)
+	}
+	return p.Parse()
+}
+
+//NewStr creates an Expression from a string by default using a DefaultParser & DefaultLexer.
+//ParserOption functions can be passed to change this behaviour.
+func NewStr(s string, opts ...ParserOption) (ex *Expression, err error) {
+	b := bufio.NewReader(strings.NewReader(s))
+	return New(b, opts...)
+}
 
 var unaryFuncMap map[string]string = map[string]string{
 	"!": "not",
@@ -34,6 +59,14 @@ type Parser interface {
 type DefaultParser struct {
 	lexer Lexer
 	buff  []*Token
+}
+
+// NewDefaultParser returns an initialised DefaultParser
+func NewDefaultParser(l Lexer) Parser {
+	return &DefaultParser{
+		lexer: l,
+		buff:  make([]*Token, 0),
+	}
 }
 
 //next gets & consumes the next non-whitepace *Token either from the buffer or the lexer

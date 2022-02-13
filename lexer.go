@@ -88,8 +88,8 @@ type DefaultLexer struct {
 	eof    bool
 }
 
-//NewLexer returns a *Lexer to read an expression from the provided reader
-func NewDefaultLexer(r *bufio.Reader) *DefaultLexer {
+//NewLexer returns a Lexer to read an expression from the provided reader
+func NewDefaultLexer(r *bufio.Reader) Lexer {
 	return &DefaultLexer{
 		Reader: r,
 		buff:   make([]rune, 0),
