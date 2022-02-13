@@ -50,6 +50,36 @@ The above  example intersperses the characters from 2 strings & can now be used 
 ```
 intersperse("Hello","World") //HWeolrllod
 ```
+## Expression Syntax 
+-  Literals may be expressed as numbers (with or without decimal points) or strings (enclosed in double quotes).
+    - Numbers without decimal points will be parsed as int's
+    - Numbers with decimal points will be parsed as float64's
+    - It may be necessary to use builtin number conversion functions to convert to the types needed for calling functions (either directly or via binary operators)
+    ```
+    float64(5) + multiply(float64(7), 3.25) //returns 27.75
+    ```
+- Standard dot-notation is used to reference variables and their child properties & methods, starting with the top level variable names which are added into the Values provided to the *Expression.Evaluate call
+    - xex can only access public properties & methods of an object
+    ```
+    myvar.SomeProperty.SomeSubProperty
+    ```
+- Methods & functions are identified by an open parenthesis at teh end of their identifier (with NO whitespace between the name & the open parenthesis)
+    - Methods & function arguments are comma-separated within parentheses as they are in most languages 
+    ```
+    add( myvar.SomeMethod(), 5 )
+    ```
+- If a method or function returns multiple return values, by default the first one  returned is used. If you want to override this, you can use curly braces to use a different value
+    ```
+    someFunction(){1} //use the 2nd value returned from the function
+    someFunction() //equivalent to writing someFunction{0}
+    ```
+- Methods & functions which return an error as the last argument have that argument checked during executionand if not nil on any call in the expression, evaluation is terminated & *Expression.Evaluate returns the error
+
+- Array/slice & map indices can be accessed with square brackets
+    ```
+    concat(mySlice[3], myMap["mykey"])
+    ```
+- There are lots of example expressions in the unit tests which should give a good flavour of what's possible & how
 
 ## Binary Operators
 The following binary operators & the built-in functions that they map to are as follows:
