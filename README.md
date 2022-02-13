@@ -18,10 +18,10 @@ count(lib.Books()) / lib.NumAuthors
 ## Usage
 To build xex into your application (skipping error checking for brevity):
 ```
-	ex, _ := xex.NewStr("concat(myvar.someProp, "_is_xexy)")
-    //You can also use xex.New to use a *bufio.Reader instead of a string
-	r, _ := ex.Evaluate(Values{"myvar": anAppVar})
-    fmt.Println(r)
+ex, _ := xex.NewStr("concat(myvar.someProp, "_is_xexy)")
+//You can also use xex.New to use a *bufio.Reader instead of a string
+r, _ := ex.Evaluate(Values{"myvar": anAppVar})
+fmt.Println(r)
 ```
 In the above, **anAppVar** is any variable from your application that you wish to allow users to invoke expressions on.
 
