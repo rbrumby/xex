@@ -23,7 +23,7 @@ ex, _ := xex.NewStr("concat(myvar.someProp, "_is_xexy)")
 r, _ := ex.Evaluate(Values{"myvar": anAppVar})
 fmt.Println(r)
 ```
-In the above, **anAppVar** is any variable from your application that you wish to allow users to invoke expressions on.
+The expression references a top-level value "myvar" which we assign to application variable **anAppVar** when we evaluate the expression.
 
 ## Extensibility
 xex includes numerous [built-in functions](builtins.md) but is fully extensible - you can add your own functions or any functions from any library.
