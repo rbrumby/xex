@@ -13,9 +13,9 @@ func registerNumberBuiltins() {
 			"add",
 			FunctionDocumentation{
 				Text: `adds two numbers returning a single numerical result`,
-				Parameters: map[string]string{
-					"num1": "The first number to add.",
-					"num2": "The second number to add.",
+				Parameters: []FunctionDocParam{
+					{"num1", "The first number to add."},
+					{"num2", "The second number to add."},
 				},
 			},
 			func(num1, num2 interface{}) (interface{}, error) {
@@ -64,9 +64,9 @@ func registerNumberBuiltins() {
 			"subtract",
 			FunctionDocumentation{
 				Text: `subtracts two numbers returning a single numerical result`,
-				Parameters: map[string]string{
-					"minuend":    "The initial number to subtract from.",
-					"subtrahend": "The value to subreact from minuend.",
+				Parameters: []FunctionDocParam{
+					{"minuend", "The initial number to subtract from."},
+					{"subtrahend", "The value to subreact from minuend."},
 				},
 			},
 			func(minuend, subtrahend interface{}) (interface{}, error) {
@@ -115,9 +115,9 @@ func registerNumberBuiltins() {
 			"multiply",
 			FunctionDocumentation{
 				Text: `multiplies two numbers returning a single numerical result`,
-				Parameters: map[string]string{
-					"multiplicand": "The number to be multiplied.",
-					"multiplier":   "The number to multiply by.",
+				Parameters: []FunctionDocParam{
+					{"multiplicand", "The number to be multiplied."},
+					{"multiplier", "The number to multiply by."},
 				},
 			},
 			func(multiplicand, multiplier interface{}) (interface{}, error) {
@@ -166,9 +166,9 @@ func registerNumberBuiltins() {
 			"divide",
 			FunctionDocumentation{
 				Text: `divides two numbers returning a single numerical result`,
-				Parameters: map[string]string{
-					"dividend": "The number to be divided.",
-					"divisor":  "The number to divide by.",
+				Parameters: []FunctionDocParam{
+					{"dividend", "The number to be divided."},
+					{"divisor", "The number to divide by."},
 				},
 			},
 			func(dividend, divisor interface{}) (interface{}, error) {
@@ -217,9 +217,9 @@ func registerNumberBuiltins() {
 			"pow",
 			FunctionDocumentation{
 				Text: `pow returns x to the power of y (x**y).`,
-				Parameters: map[string]string{
-					"x": "The base number.",
-					"y": "The exponent (number of times x is multiplied by itself).",
+				Parameters: []FunctionDocParam{
+					{"x", "The base number."},
+					{"y", "The exponent (number of times x is multiplied by itself)."},
 				},
 			},
 			math.Pow,
@@ -231,9 +231,9 @@ func registerNumberBuiltins() {
 			"mod",
 			FunctionDocumentation{
 				Text: `mod returns the remainder of dividend divided by divisor.`,
-				Parameters: map[string]string{
-					"dividend": "The number to be divided.",
-					"divisor":  "The number to divide by.",
+				Parameters: []FunctionDocParam{
+					{"dividend", "The number to be divided."},
+					{"divisor", "The number to divide by."},
 				},
 			},
 			math.Mod,
@@ -283,8 +283,8 @@ func registerNumberBuiltins() {
 			"int8",
 			FunctionDocumentation{
 				Text: `int8 converts the passed in value to an int8 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (int8, error) {
@@ -324,8 +324,8 @@ func registerNumberBuiltins() {
 			"int16",
 			FunctionDocumentation{
 				Text: `int16 converts the passed in value to an int16 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (int16, error) {
@@ -365,8 +365,8 @@ func registerNumberBuiltins() {
 			"int32",
 			FunctionDocumentation{
 				Text: `int32 converts the passed in value to an int32 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (int32, error) {
@@ -406,8 +406,8 @@ func registerNumberBuiltins() {
 			"int64",
 			FunctionDocumentation{
 				Text: `int64 converts the passed in value to an int64 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (int64, error) {
@@ -447,8 +447,8 @@ func registerNumberBuiltins() {
 			"uint",
 			FunctionDocumentation{
 				Text: `uint converts the passed in value to an uint or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (uint, error) {
@@ -488,8 +488,8 @@ func registerNumberBuiltins() {
 			"uint8",
 			FunctionDocumentation{
 				Text: `uint8 converts the passed in value to an uint8 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (uint8, error) {
@@ -529,8 +529,8 @@ func registerNumberBuiltins() {
 			"uint16",
 			FunctionDocumentation{
 				Text: `uint16 converts the passed in value to an uint16 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (uint16, error) {
@@ -570,8 +570,8 @@ func registerNumberBuiltins() {
 			"uint32",
 			FunctionDocumentation{
 				Text: `uint32 converts the passed in value to an uint32 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (uint32, error) {
@@ -611,8 +611,8 @@ func registerNumberBuiltins() {
 			"uint64",
 			FunctionDocumentation{
 				Text: `uint64 converts the passed in value to an uint64 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (uint64, error) {
@@ -652,8 +652,8 @@ func registerNumberBuiltins() {
 			"float32",
 			FunctionDocumentation{
 				Text: `float32 converts the passed in value to an float32 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (float32, error) {
@@ -693,8 +693,8 @@ func registerNumberBuiltins() {
 			"float64",
 			FunctionDocumentation{
 				Text: `float64 converts the passed in value to an float64 or returns a error if conversion isn't possible`,
-				Parameters: map[string]string{
-					"number": "The number to convert.",
+				Parameters: []FunctionDocParam{
+					{"number", "The number to convert."},
 				},
 			},
 			func(number interface{}) (float64, error) {

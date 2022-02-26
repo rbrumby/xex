@@ -289,7 +289,7 @@ func (p *DefaultParser) functionalize(node Node) (Node, error) {
 			if err != nil {
 				return nil, fmt.Errorf("error parsing binary function argument: %s", err)
 			}
-			logger.Debugf("functionalize created function %q with args %s", fn.name, args)
+			logger.Debugf("functionalize created function %q with args %s", fn.Name, args)
 			return NewFunctionCall(fn, args, 0), nil //binary functions can only sue the first return value (hardcoded zero)
 		}
 		return nil, fmt.Errorf("unrecognized binary operator %s", next)

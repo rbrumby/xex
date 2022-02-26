@@ -12,8 +12,8 @@ func registerStringBuiltins() {
 			"string",
 			FunctionDocumentation{
 				Text: `Converts an input into a string using fmt.Sprint`,
-				Parameters: map[string]string{
-					"in": "The value to convert to a string.",
+				Parameters: []FunctionDocParam{
+					{"in", "The value to convert to a string."},
 				},
 			},
 			func(in interface{}) string {
@@ -27,8 +27,8 @@ func registerStringBuiltins() {
 			"concat",
 			FunctionDocumentation{
 				Text: `concatenates any number of strings returning a single string result`,
-				Parameters: map[string]string{
-					"strs": "variadic - the strings to concatentate.",
+				Parameters: []FunctionDocParam{
+					{"strs", "variadic - the strings to concatentate."},
 				},
 			},
 			func(strs ...string) string {
@@ -46,8 +46,8 @@ func registerStringBuiltins() {
 			"len",
 			FunctionDocumentation{
 				Text: `returns the length of a string`,
-				Parameters: map[string]string{
-					"in": "The string to measure.",
+				Parameters: []FunctionDocParam{
+					{"in", "The string to measure."},
 				},
 			},
 			func(in string) int {
@@ -61,10 +61,10 @@ func registerStringBuiltins() {
 			"substring",
 			FunctionDocumentation{
 				Text: `returns the substring of the input string from index1 to index2 -1. If index2 is zero, everything to the end of the string is returned`,
-				Parameters: map[string]string{
-					"input": "The string take take a substring from.",
-					"start": "The start index (counting from 0).",
-					"end":   "The end index. If this is less than 1, defaults to the end of the string.",
+				Parameters: []FunctionDocParam{
+					{"input", "The string take take a substring from."},
+					{"start", "The start index (counting from 0)."},
+					{"end", "The end index. If this is less than 1, defaults to the end of the string."},
 				},
 			},
 			func(input string, start, end int) string {
@@ -81,9 +81,9 @@ func registerStringBuiltins() {
 			"instring",
 			FunctionDocumentation{
 				Text: `returns the start position in the input string of the search string or -1 if the search string is not found`,
-				Parameters: map[string]string{
-					"input":  "The string to search.",
-					"search": "The string to find in the input.",
+				Parameters: []FunctionDocParam{
+					{"input", "The string to search."},
+					{"search", "The string to find in the input."},
 				},
 			},
 			func(input, search string) int {

@@ -13,9 +13,9 @@ func registerCoreBuiltins() {
 			"equals",
 			FunctionDocumentation{
 				Text: `compares 2 inputs returning a bool`,
-				Parameters: map[string]string{
-					"val1": "The first value to compare",
-					"val2": "The second value to compare",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value to compare"},
+					{"val2", "The second value to compare"},
 				},
 			},
 			func(val1, val2 interface{}) bool {
@@ -33,8 +33,8 @@ func registerCoreBuiltins() {
 				If a final value is provided (an even number of arguments is passed in total), the final value is used as the default.
 				If value1 equals value2, value3 is returned. Else if value1 equals value4, value5 is returned. And so on.
 				If there is no default and no values matched, switch returns nil.`,
-				Parameters: map[string]string{
-					"values": "variadic - the value to test then alternate if/else pairs and finally an optional else value",
+				Parameters: []FunctionDocParam{
+					{"values", "variadic - the value to test then alternate if/else pairs and finally an optional else value"},
 				},
 			},
 			func(values ...interface{}) interface{} {
@@ -59,9 +59,9 @@ func registerCoreBuiltins() {
 			"and",
 			FunctionDocumentation{
 				Text: `Returns true (bool) if both inputs are true, else false.`,
-				Parameters: map[string]string{
-					"val1": "The first bool value",
-					"val2": "The second bool value",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first bool value"},
+					{"val2", "The second bool value"},
 				},
 			},
 			func(val1, val2 bool) bool {
@@ -75,9 +75,9 @@ func registerCoreBuiltins() {
 			"or",
 			FunctionDocumentation{
 				Text: `Returns true (bool) if either or both inouts are true, else false.`,
-				Parameters: map[string]string{
-					"val1": "The first bool value",
-					"val2": "The second bool value",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first bool value"},
+					{"val2", "The second bool value"},
 				},
 			},
 			func(val1, val2 bool) bool {
@@ -91,8 +91,8 @@ func registerCoreBuiltins() {
 			"not",
 			FunctionDocumentation{
 				Text: `Accepts a boolean & returns its inverse`,
-				Parameters: map[string]string{
-					"value": "The value to invert.",
+				Parameters: []FunctionDocParam{
+					{"value", "The value to invert."},
 				},
 			},
 			func(value bool) bool {
@@ -106,9 +106,9 @@ func registerCoreBuiltins() {
 			"notEquals",
 			FunctionDocumentation{
 				Text: `Compares 2 inputs returning a bool.`,
-				Parameters: map[string]string{
-					"val1": "The first value to compare.",
-					"val2": "The second value to compare.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value to compare."},
+					{"val2", "The second value to compare."},
 				},
 			},
 			func(val1, val2 interface{}) bool {
@@ -122,9 +122,9 @@ func registerCoreBuiltins() {
 			"greaterThan",
 			FunctionDocumentation{
 				Text: `Returns the result of val1 > val2. Values must be numeric or string.`,
-				Parameters: map[string]string{
-					"val1": "The first value.",
-					"val2": "The second value.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value."},
+					{"val2", "The second value."},
 				},
 			},
 			func(val1, val2 interface{}) (res bool, err error) {
@@ -155,9 +155,9 @@ func registerCoreBuiltins() {
 			"greaterThanEqual",
 			FunctionDocumentation{
 				Text: `Returns the result of val1 >= val2. Values must be numeric or string.`,
-				Parameters: map[string]string{
-					"val1": "The first value.",
-					"val2": "The second value.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value."},
+					{"val2", "The second value."},
 				},
 			},
 			func(val1, val2 interface{}) (res bool, err error) {
@@ -188,9 +188,9 @@ func registerCoreBuiltins() {
 			"lessThan",
 			FunctionDocumentation{
 				Text: `Returns the result of val1 < val2. Values must be numeric or string.`,
-				Parameters: map[string]string{
-					"val1": "The first value.",
-					"val2": "The second value.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value."},
+					{"val2", "The second value."},
 				},
 			},
 			func(val1, val2 interface{}) (res bool, err error) {
@@ -221,9 +221,9 @@ func registerCoreBuiltins() {
 			"lessThanEqual",
 			FunctionDocumentation{
 				Text: `Returns the result of val1 <= val2. Values must be numeric or string.`,
-				Parameters: map[string]string{
-					"val1": "The first value.",
-					"val2": "The second value.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value."},
+					{"val2", "The second value."},
 				},
 			},
 			func(val1, val2 interface{}) (res bool, err error) {
@@ -254,8 +254,8 @@ func registerCoreBuiltins() {
 			"nil",
 			FunctionDocumentation{
 				Text: `Returns what is passed - used to implement parenthesis grouping`,
-				Parameters: map[string]string{
-					"value": "The value which will be returned as this function does nothing!",
+				Parameters: []FunctionDocParam{
+					{"value", "The value which will be returned as this function does nothing!"},
 				},
 			},
 			func(value interface{}) interface{} {
@@ -269,9 +269,9 @@ func registerCoreBuiltins() {
 			"addOrConcat",
 			FunctionDocumentation{
 				Text: `Chooses to call add or concat depending if args are numeric or not.`,
-				Parameters: map[string]string{
-					"val1": "The first value to add / concat.",
-					"val2": "The second value to add / concat.",
+				Parameters: []FunctionDocParam{
+					{"val1", "The first value to add / concat."},
+					{"val2", "The second value to add / concat."},
 				},
 			},
 			func(val1 interface{}, val2 interface{}) (interface{}, error) {

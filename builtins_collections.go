@@ -12,8 +12,8 @@ func registerCollectionBuiltins() {
 			FunctionDocumentation{
 				Text: `Makes a new slice containing the passed in values. The type of slice created is determined by the type passed in the first element of values.
 				slice can be used to create a list of values to test against - is myproperty x, y or z?: select(slice("x", "y", "z"), .myproperty) > 0`,
-				Parameters: map[string]string{
-					"values": "variadic - any number of values can be passed to be built into a slice. Types must be compatible with the first value passed.",
+				Parameters: []FunctionDocParam{
+					{"values", "variadic - any number of values can be passed to be built into a slice. Types must be compatible with the first value passed."},
 				},
 			},
 			func(values ...interface{}) (out interface{}, err error) {
@@ -40,8 +40,8 @@ func registerCollectionBuiltins() {
 			FunctionDocumentation{
 				Text: `Makes a new map containing the passed in mapEntry values.
 				The type of the map (key / value) created is determined by the types passed in the first element of values.`,
-				Parameters: map[string]string{
-					"values": "variadic - any number of MapEntry's can be passed to be built into a Map. Types must be compatible with the first value passed.",
+				Parameters: []FunctionDocParam{
+					{"values", "variadic - any number of MapEntry's can be passed to be built into a Map. Types must be compatible with the first value passed."},
 				},
 			},
 			func(values ...MapEntry) (out interface{}, err error) {
@@ -68,9 +68,9 @@ func registerCollectionBuiltins() {
 			"entry",
 			FunctionDocumentation{
 				Text: `Creates a map entry with the passed in key & value.`,
-				Parameters: map[string]string{
-					"key":   "The map entry key.",
-					"value": "The map entry value.",
+				Parameters: []FunctionDocParam{
+					{"key", "The map entry key."},
+					{"value", "The map entry value."},
 				},
 			},
 			func(key interface{}, value interface{}) (entry MapEntry) {
@@ -90,11 +90,11 @@ func registerCollectionBuiltins() {
 				//BookList is a collection. For each "book" in the list, we want to evaluate the equals Expression.
 				//We also pass enother evaluated value SelectedAuthor which will be accessible as $0 in our expression.
 				select(root.BookList, "book", "equals(book.Author, $0)", root.SelectedAuthor)`,
-				Parameters: map[string]string{
-					"coll":    "The collection (array, slice or map) to select from.",
-					"forEach": "The name by which we will refer to each entry in coll",
-					"expr":    "An expression (Node) to apply using to each value in coll. MUST return a bool (true or false).",
-					"refs":    "An optional list values () which can be referenced as $0, $1, etc within the expression.",
+				Parameters: []FunctionDocParam{
+					{"coll", "The collection (array, slice or map) to select from."},
+					{"forEach", "The name by which we will refer to each entry in coll"},
+					{"expr", "An expression (Node) to apply using to each value in coll. MUST return a bool (true or false)."},
+					{"refs", "An optional list values () which can be referenced as $0, $1, etc within the expression."},
 				},
 			},
 			func(coll interface{}, forEach string, expr Node, refs ...interface{}) (interface{}, error) {
@@ -151,9 +151,9 @@ func registerCollectionBuiltins() {
 			"indexOf",
 			FunctionDocumentation{
 				Text: `Returns the entry from the passed collection at the requested index.`,
-				Parameters: map[string]string{
-					"coll":  "The collection (array, slice or map) from which to extract a value.",
-					"index": "The index / key to extract from coll",
+				Parameters: []FunctionDocParam{
+					{"coll", "The collection (array, slice or map) from which to extract a value."},
+					{"index", "The index / key to extract from coll"},
 				},
 			},
 			func(coll interface{}, index interface{}) (interface{}, error) {
@@ -182,8 +182,8 @@ func registerCollectionBuiltins() {
 			"count",
 			FunctionDocumentation{
 				Text: `Returns the number of elements in the passed in slice / array or map.`,
-				Parameters: map[string]string{
-					"in": "The number of elements in the collection.",
+				Parameters: []FunctionDocParam{
+					{"in", "The number of elements in the collection."},
 				},
 			},
 			func(in interface{}) (int, error) {

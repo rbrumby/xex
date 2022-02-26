@@ -20,23 +20,35 @@ func init() {
 	registerCollectionBuiltins()
 }
 
+type FunctionDocParam struct {
+	Name        string
+	Description string
+}
+
 type FunctionDocumentation struct {
 	Text       string
-	Parameters map[string]string
+	Parameters []FunctionDocParam
 }
 
 //Function represents a xex function which can be dynamically invoked.
 type Function struct {
-	name          string
-	documentation FunctionDocumentation
+	Name          string
+	Documentation FunctionDocumentation
 	impl          interface{}
+}
+
+func GetFunctionNames() (names []string) {
+	for n, _ := range functions {
+		names = append(names, n)
+	}
+	return
 }
 
 //NewFunction returns a pointer to a new Function.
 func NewFunction(name string, documentation FunctionDocumentation, implementation interface{}) *Function {
 	f := Function{
-		name:          name,
-		documentation: documentation,
+		Name:          name,
+		Documentation: documentation,
 		impl:          implementation,
 	}
 	if err := f.validate(FuncNameRegex); err != nil {
@@ -45,34 +57,30 @@ func NewFunction(name string, documentation FunctionDocumentation, implementatio
 	return &f
 }
 
-func (f *Function) Name() string {
-	return f.name
-}
-
 func (f *Function) DocumentationString() string {
 	out := strings.Builder{}
-	out.WriteString(f.documentation.Text)
-	for k, v := range f.documentation.Parameters {
+	out.WriteString(f.Documentation.Text)
+	for _, p := range f.Documentation.Parameters {
 		out.WriteRune('\n')
-		out.WriteString(k + ": " + v)
+		out.WriteString(p.Name + ": " + p.Description)
 	}
 	return out.String()
 }
 
 //validate validates that the Function implementation
 func (f *Function) validate(fNameRegex string) (err error) {
-	if f.Name() == "" {
+	if f.Name == "" {
 		err = fmt.Errorf("attempt to use unnamed function")
 		return
 	}
-	if ok, err := regexp.MatchString(fNameRegex, f.name); !ok {
+	if ok, err := regexp.MatchString(fNameRegex, f.Name); !ok {
 		if err != nil {
-			panic(fmt.Errorf("error applying regexp %q to %q: %s", fNameRegex, f.name, err))
+			panic(fmt.Errorf("error applying regexp %q to %q: %s", fNameRegex, f.Name, err))
 		}
-		panic(fmt.Errorf("invalid function name %q: function names must match regular expression %q", f.name, fNameRegex))
+		panic(fmt.Errorf("invalid function name %q: function names must match regular expression %q", f.Name, fNameRegex))
 	}
 	if f.impl == nil || reflect.TypeOf(f.impl).Kind() != reflect.Func {
-		err = fmt.Errorf("implementation of %q is not a Go function", f.Name())
+		err = fmt.Errorf("implementation of %q is not a Go function", f.Name)
 		return
 	}
 	return
@@ -89,8 +97,8 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 	//for example arguments do not match the function implementation
 	defer func() {
 		if recv := recover(); recv != nil {
-			logger.Debugf("recovering from call to %q with args %v: %s", f.Name(), args, recv)
-			err = fmt.Errorf("error executing %q with args %v: %v", f.Name(), args, recv)
+			logger.Debugf("recovering from call to %q with args %v: %s", f.Name, args, recv)
+			err = fmt.Errorf("error executing %q with args %v: %v", f.Name, args, recv)
 		}
 	}()
 
@@ -129,10 +137,10 @@ func RegisterFunction(f *Function) {
 	if err := f.validate(FuncNameRegex); err != nil {
 		panic(errors.New("attempt to register unnamed or unimplemented function - a function must have a name & an implementation"))
 	}
-	if _, ok := functions[f.Name()]; ok {
-		panic(fmt.Errorf("function %q is already registered", f.Name()))
+	if _, ok := functions[f.Name]; ok {
+		panic(fmt.Errorf("function %q is already registered", f.Name))
 	}
-	functions[f.Name()] = f
+	functions[f.Name] = f
 }
 
 //GetFunction returns the named Function from the registry or returns an error if the name does not exist.

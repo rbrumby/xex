@@ -63,7 +63,7 @@ func NewFunctionCall(function *Function, arguments []Node, index int) *FunctionC
 }
 
 func (fc *FunctionCall) Name() string {
-	return fc.function.name
+	return fc.function.Name
 }
 
 func (fc *FunctionCall) Index() int {

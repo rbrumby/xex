@@ -7,15 +7,15 @@ import (
 
 func TestHappyPathRegisterGetAndExec(t *testing.T) {
 	RegisterFunction(
-		NewFunction("test", FunctionDocumentation{Text: "just a test", Parameters: map[string]string{"test1": "param1"}}, testFunc),
+		NewFunction("test", FunctionDocumentation{Text: "just a test", Parameters: []FunctionDocParam{{"test1", "param1"}}}, testFunc),
 	)
 	f, err := GetFunction("test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	if f.Name() != "test" || f.DocumentationString() != "just a test\ntest1: param1" {
-		t.Errorf("unexpected function documentation: %s - %s", f.Name(), f.DocumentationString())
+	if f.Name != "test" || f.DocumentationString() != "just a test\ntest1: param1" {
+		t.Errorf("unexpected function documentation: %s - %s", f.Name, f.DocumentationString())
 		return
 	}
 	values, err := f.Exec("XXX")
@@ -89,7 +89,7 @@ func TestInvalidFunctionName(t *testing.T) {
 func TestInvalidFuncNameregex(t *testing.T) {
 	defer assertPanic(t)
 	fn := NewFunction("valid", FunctionDocumentation{Text: "just a test"}, testFunc)
-	fn.name = "in-valid"
+	fn.Name = "in-valid"
 	fn.validate("regexpisinvalid(")
 }
 
@@ -107,13 +107,13 @@ func TestNilFunctionImplementation(t *testing.T) {
 func TestRegisterInternallyBrokenFunction(t *testing.T) {
 	defer assertPanic(t)
 	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFuncNoError)
-	f.name = ""
+	f.Name = ""
 	RegisterFunction(f)
 }
 
 func TestCallInternallyBrokenFunction(t *testing.T) {
 	f := NewFunction("test", FunctionDocumentation{Text: "just a test"}, testFuncNoError)
-	f.name = ""
+	f.Name = ""
 	_, err := f.Exec()
 	if err == nil {
 		t.Error(err)
