@@ -38,7 +38,7 @@ type Function struct {
 }
 
 func GetFunctionNames() (names []string) {
-	for n, _ := range functions {
+	for n := range functions {
 		names = append(names, n)
 	}
 	return
