@@ -88,7 +88,7 @@ func registerCollectionBuiltins() {
 				If coll refers to a map, expression is evaluated on the map value, not the key.
 				Example:
 				//BookList is a collection. For each "book" in the list, we want to evaluate the equals Expression.
-				//We also pass enother evaluated value SelectedAuthor which will be accessible as $0 in our expression.
+				//We also pass another evaluated value SelectedAuthor which will be accessible as $0 in our expression.
 				select(root.BookList, "book", "equals(book.Author, $0)", root.SelectedAuthor)`,
 				Parameters: []FunctionDocParam{
 					{"coll", "The collection (array, slice or map) to select from."},
@@ -141,7 +141,8 @@ func registerCollectionBuiltins() {
 					return 0, fmt.Errorf("cannot select from %q", reflect.TypeOf(coll).String())
 				}
 				logger.Debugf("select: response is a %q of %q", reflect.TypeOf(out.Interface()).Kind(), reflect.TypeOf(out.Interface()).Elem().Name())
-				return out.Interface(), nil
+				ooo := out.Interface()
+				return ooo, nil
 			},
 		),
 	)

@@ -2,7 +2,6 @@ package xex
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -12,7 +11,7 @@ func TestEmptyExpression(t *testing.T) {
 	lex := NewDefaultLexer(bufio.NewReader(strings.NewReader(
 		"",
 	)))
-	par := DefaultParser{
+	par := &Parser{
 		lexer: lex,
 	}
 	_, err := par.Parse()
@@ -23,7 +22,7 @@ func TestEmptyExpression(t *testing.T) {
 }
 
 func TestPeekNext(t *testing.T) {
-	p := &DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader("test 123 abc"))),
 		buff:  make([]*Token, 0),
 	}
@@ -207,7 +206,7 @@ func TestParseCollectionIndexSubProp(t *testing.T) {
 }
 
 func justParseAndCheckString(exStr string, expected string) error {
-	p := DefaultParser{lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(exStr)))}
+	p := &Parser{lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(exStr)))}
 	ex, err := p.Parse()
 	if err != nil {
 		return err
@@ -216,22 +215,4 @@ func justParseAndCheckString(exStr string, expected string) error {
 		return fmt.Errorf("expected %q, Got %q", expected, ex.String())
 	}
 	return nil
-}
-
-type dummyParser struct{}
-
-func (dp *dummyParser) Parse() (node *Expression, err error) {
-	return nil, errors.New("not a real implementation")
-}
-
-func TestCustomParser(t *testing.T) {
-	_, err := NewStr(
-		"add(4,1)",
-		func(p Parser) Parser {
-			return &dummyParser{}
-		},
-	)
-	if err.Error() != "not a real implementation" {
-		t.Error("Expected dummyParser Parse() error")
-	}
 }

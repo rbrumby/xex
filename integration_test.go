@@ -61,7 +61,7 @@ func TestReturnIndexOutOfRange(t *testing.T) {
 }
 
 func TestSelectAndIterate(t *testing.T) {
-	p := DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`select(lib.GetBooks(), "book", book.PublicationYear > 1900)`))),
 	}
 	ex, err := p.Parse()
@@ -110,7 +110,7 @@ func TestChildOfFunctionResult(t *testing.T) {
 }
 
 func TestBadMethodCollectionIndex(t *testing.T) {
-	p := DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.GetBooks()[[]]`))),
 	}
 	_, err := p.Parse()
@@ -121,7 +121,7 @@ func TestBadMethodCollectionIndex(t *testing.T) {
 }
 
 func TestBadFunctionCollectionIndex(t *testing.T) {
-	p := DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`concat("a","b")[[]]`))),
 	}
 	_, err := p.Parse()
@@ -132,7 +132,7 @@ func TestBadFunctionCollectionIndex(t *testing.T) {
 }
 
 func TestMethodCollectionIndexOutOfRange(t *testing.T) {
-	p := DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`lib.GetBooks()[9999]`))),
 	}
 	ex, err := p.Parse()
@@ -148,7 +148,7 @@ func TestMethodCollectionIndexOutOfRange(t *testing.T) {
 }
 
 func TestBadFunctionName(t *testing.T) {
-	p := DefaultParser{
+	p := &Parser{
 		lexer: NewDefaultLexer(bufio.NewReader(strings.NewReader(`XXX("a","b")`))),
 	}
 	_, err := p.Parse()

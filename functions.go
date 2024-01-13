@@ -108,6 +108,10 @@ func (f *Function) Exec(args ...interface{}) (results []interface{}, err error) 
 
 	vargs := make([]reflect.Value, len(args))
 	for i, a := range args {
+		if a == nil {
+			vargs[i] = reflect.New(reflect.TypeOf(f.impl).In(i)).Elem()
+			continue
+		}
 		vargs[i] = reflect.ValueOf(a)
 	}
 	vres := reflect.ValueOf(f.impl).Call(vargs)

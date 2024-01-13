@@ -29,7 +29,6 @@ const (
 	TOKEN_INT
 	TOKEN_FLOAT
 	TOKEN_BOOL
-	TOKEN_ALL_VALUES
 	TOKEN_EOF
 )
 
@@ -51,7 +50,6 @@ var tokenTypes = []string{
 	TOKEN_INT:             "INTEGER",
 	TOKEN_FLOAT:           "FLOAT",
 	TOKEN_BOOL:            "BOOL",
-	TOKEN_ALL_VALUES:      "ALL_VALUES",
 	TOKEN_EOF:             "EOF",
 }
 
@@ -228,10 +226,6 @@ func lexNextToken(l *DefaultLexer) stateFn {
 		l.consume(nil)
 		l.emit(TOKEN_RRESULT)
 		return lexNextToken
-	case r == '#':
-		l.consume(nil)
-		l.emit(TOKEN_ALL_VALUES)
-		return lexNextToken
 	case isOperator(r):
 		if r == '!' {
 			l.consume(nil)
@@ -290,7 +284,7 @@ func isIdentChar(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r)
 }
 func isOperator(r rune) bool {
-	return strings.ContainsRune("+-/*%^<>=!", r)
+	return strings.ContainsRune("+-/*%^<>=!&|", r)
 }
 
 func isQuote(r rune) bool {

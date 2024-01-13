@@ -260,6 +260,16 @@ func (p *Property) Name() string {
 	return p.name
 }
 
+func (p *Property) FullyQualifiedName() (fqn string) {
+	par := p
+	fqn = p.Name()
+	for par.parent != nil {
+		fqn = par.parent.Name() + "." + fqn
+		par = par.parent.(*Property)
+	}
+	return
+}
+
 //Evaluate will evaluate the chain of parent nodes if parent is not null.
 //If parent is null it will evaluate the property from the env object.
 func (p *Property) Evaluate(values Values) (interface{}, error) {
@@ -278,20 +288,37 @@ func (p *Property) Evaluate(values Values) (interface{}, error) {
 }
 
 //evaluate does the real evaluation dereferencing pointers along the way.
-func (p *Property) evaluate(env interface{}) (result interface{}, err error) {
-	var propVal reflect.Value
+func (p *Property) evaluate(obj interface{}) (result interface{}, err error) {
 	//If property name is null, return top-level env object
 	if p.Name() == "" {
-		return env, nil
+		return obj, nil
 	}
-	if reflect.ValueOf(env).Kind() == reflect.Ptr {
+	//Check we didn't get a nil obj to evaluate the property of
+	if obj == nil {
+		return nil, fmt.Errorf("cannot evaluate property %q of nil", p.Name())
+	}
+	var propVal reflect.Value
+	if reflect.ValueOf(obj).Kind() == reflect.Array {
+		return nil, fmt.Errorf("attempt to access property %q of an array (rather than an element of the array)", p.name)
+	}
+	if reflect.ValueOf(obj).Kind() == reflect.Slice {
+		return nil, fmt.Errorf("attempt to access property %q of a slice (rather than an element of the slice)", p.name)
+	}
+	if reflect.ValueOf(obj).Kind() == reflect.Map {
+		return nil, fmt.Errorf("attempt to access property %q of a map (rather than an entry in the map)", p.name)
+	}
+	if reflect.ValueOf(obj).Kind() == reflect.Ptr {
 		//use the dereferenced value
-		propVal = reflect.ValueOf(reflect.ValueOf(env).Elem().Interface()).FieldByName(p.Name())
+		propVal = reflect.ValueOf(reflect.ValueOf(obj).Elem().Interface()).FieldByName(p.Name())
 	} else {
-		propVal = reflect.ValueOf(env).FieldByName(p.Name())
+		propVal = reflect.ValueOf(obj).FieldByName(p.Name())
 	}
 	if !propVal.IsValid() {
-		return nil, fmt.Errorf("property %q not found", p.Name())
+		return nil, nil
+		// return nil, fmt.Errorf("property %q not found", p.FullyQualifiedName())
+	}
+	if propVal.Kind() == reflect.Ptr && propVal.IsNil() {
+		return reflect.Value{}, nil
 	}
 	result = propVal.Interface()
 	return

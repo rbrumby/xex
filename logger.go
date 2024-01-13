@@ -1,5 +1,7 @@
 package xex
 
+import "fmt"
+
 type LogLevel uint8
 
 const (
@@ -45,3 +47,16 @@ func (n *noLogger) Info(entries ...interface{})               {}
 func (n *noLogger) Infof(fmtStr string, args ...interface{})  {}
 func (n *noLogger) Error(entries ...interface{})              {}
 func (n *noLogger) Errorf(fmtStr string, args ...interface{}) {}
+
+type ConsoleLogger struct{}
+
+func (n *ConsoleLogger) Debug(entries ...interface{})              { fmt.Print(entries...) }
+func (n *ConsoleLogger) Debugf(fmtStr string, args ...interface{}) { fmt.Printf(fmtStr, args...) }
+func (n *ConsoleLogger) Info(entries ...interface{})               { fmt.Print(entries...) }
+func (n *ConsoleLogger) Infof(fmtStr string, args ...interface{})  { fmt.Printf(fmtStr, args...) }
+func (n *ConsoleLogger) Error(entries ...interface{})              { fmt.Print(entries...) }
+func (n *ConsoleLogger) Errorf(fmtStr string, args ...interface{}) { fmt.Printf(fmtStr, args...) }
+
+func GetLogger() Logger {
+	return logger
+}
